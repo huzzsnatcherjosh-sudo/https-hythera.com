@@ -1,671 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<title>RedRollChat</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<link rel="icon" href="data:,"/>
-<!-- =====  CDN LIBS  ===== -->
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://unpkg.com/socket.io-client@4/dist/socket.io.min.js"></script>
-<script src="https://unpkg.com/mediasoup-client@3/dist/mediasoup-client.min.js"></script>
-<script src="https://unpkg.com/webrtc-adapter@8/adapter.min.js"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SnapClone</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 <style>
-/* ----------  CSS VARIABLES (THEME)  ---------- */
 :root{
-  --bg-primary:#36393f;
-  --bg-secondary:#2f3136;
-  --bg-tertiary:#202225;
-  --text-normal:#dcddde;
-  --text-muted:#72767d;
-  --text-link:#00aff4;
-  --header-primary:#fff;
-  --header-secondary:#b9bbbe;
-  --interactive-normal:#b9bbbe;
-  --interactive-hover:#dcddde;
-  --interactive-active:#fff;
-  --button-accent:#5865f2;
-  --button-accent-hover:#4752c4;
-  --status-green:#3ba55d;
-  --status-yellow:#faa61a;
-  --status-red:#f04747;
-  --font-primary:Whitney,"Helvetica Neue",Helvetica,Arial,sans-serif;
-  --font-mono:Consolas,"Liberation Mono",Menlo,Courier,monospace;
-  --channel-width:240px;
-  --member-width:240px;
-  --server-icon:48px;
-  --ease:out cubic-bezier(.2,0,0,1);
+  --bg:#000;
+  --text:#fff;
+  --accent:#fffc00;
+  --card:#111;
 }
-/* ----------  RESET  ---------- */
-*{box-sizing:border-box;margin:0;padding:0;font-family:var(--font-primary);}
-body,html{height:100%;background:var(--bg-primary);color:var(--text-normal);}
-button,input,textarea,select{color:inherit;font-size:14px;border:none;background:var(--bg-tertiary);padding:8px 12px;border-radius:4px;}
-button{cursor:pointer;background:var(--button-accent);color:#fff;}
-button:hover{background:var(--button-accent-hover);}
-img{max-width:100%;display:block;}
-/* ----------  LAYOUT  ---------- */
-.app{display:flex;height:100vh;overflow:hidden;}
-.server-list{width:72px;background:var(--bg-tertiary);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:12px;overflow-y:auto;}
-.server-icon{width:var(--server-icon);height:var(--server-icon);border-radius:50%;cursor:pointer;transition:transform .2s var(--ease);}
-.server-icon:hover{transform:scale(1.1);}
-.server-icon.active{box-shadow:0 0 0 4px var(--button-accent);}
-.channel-panel{width:var(--channel-width);background:var(--bg-secondary);display:flex;flex-direction:column;}
-.channel-header{height:48px;border-bottom:1px solid rgba(0,0,0,.2);display:flex;align-items:center;padding:0 16px;font-weight:600;}
-.channel-list{flex:1;overflow-y:auto;padding:8px 0;}
-.channel-item{padding:6px 16px;margin:2px 8px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:8px;}
-.channel-item:hover{background:rgba(79,84,92,.16);}
-.channel-item.active{background:rgba(88,101,242,.2);color:var(--header-primary);}
-.channel-item .icon{font-size:18px;}
-.member-list{width:var(--member-width);background:var(--bg-secondary);padding:16px;display:flex;flex-direction:column;gap:12px;}
-.member-item{display:flex;align-items:center;gap:10px;}
-.member-avatar{width:32px;height:32px;border-radius:50%;}
-.chat-area{flex:1;background:var(--bg-primary);display:flex;flex-direction:column;}
-.chat-header{height:48px;border-bottom:1px solid rgba(0,0,0,.2);display:flex;align-items:center;padding:0 16px;font-weight:600;}
-.message-list{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:8px;}
-.message{display:flex;gap:12px;}
-.message-avatar{width:40px;height:40px;border-radius:50%;}
-.message-body{flex:1;}
-.message-header{display:flex;gap:8px;align-items:center;}
-.message-author{font-weight:600;}
-.message-time{font-size:12px;color:var(--text-muted);}
-.message-content{word-break:break-word;}
-.message-embed{border-left:4px solid var(--button-accent);padding:8px 12px;margin-top:4px;background:rgba(0,0,0,.1);border-radius:4px;}
-.chat-input-area{border-top:1px solid rgba(0,0,0,.2);padding:16px;display:flex;gap:12px;align-items:center;}
-.chat-input{flex:1;resize:none;max-height:120px;}
-/* ----------  MODALS  ---------- */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:999;}
-.modal{background:var(--bg-secondary);border-radius:8px;width:440px;max-width:90vw;display:flex;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,.5);}
-.modal-header{padding:16px;font-size:18px;font-weight:600;border-bottom:1px solid rgba(0,0,0,.2);}
-.modal-body{padding:16px;display:flex;flex-direction:column;gap:12px;}
-.modal-footer{padding:16px;border-top:1px solid rgba(0,0,0,.2);display:flex;justify-content:flex-end;gap:8px;}
-/* ----------  EMOJI PICKER  ---------- */
-.emoji-picker{max-height:320px;display:grid;grid-template-columns:repeat(8,1fr);gap:4px;overflow-y:auto;padding:8px;background:var(--bg-tertiary);border-radius:8px;}
-.emoji-cell{cursor:pointer;font-size:24px;text-align:center;padding:4px;border-radius:4px;}
-.emoji-cell:hover{background:rgba(255,255,255,.1);}
-/* ----------  VOICE INDICATORS  ---------- */
-.voice-bar{height:52px;background:var(--bg-tertiary);display:flex;align-items:center;padding:0 16px;gap:12px;border-top:1px solid rgba(0,0,0,.2);}
-.voice-controls{display:flex;gap:12px;margin-left:auto;}
-.voice-user{display:flex;align-items:center;gap:8px;}
-.speaking{box-shadow:0 0 0 3px var(--status-green);}
-/* ----------  UTILS  ---------- */
-.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.flex-1{flex:1;}
-.gap-8{gap:8px;}
-.gap-12{gap:12px;}
-.mt-8{margin-top:8px;}
-.mt-12{margin-top:12px;}
-.text-sm{font-size:12px;}
-.text-muted{color:var(--text-muted);}
-/* ----------  MOBILE OVERRIDES  ---------- */
-@media (max-width:768px){
-  .member-list{display:none;}
-  .channel-panel{position:fixed;left:-100%;top:0;height:100%;z-index:100;transition:left .3s;}
-  .channel-panel.open{left:0;}
-}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+body{background:var(--bg);color:var(--text);height:100vh;display:flex;justify-content:center;align-items:center;overflow:hidden;}
+input,button,textarea{outline:none;border:none;background:none;color:inherit}
+img{max-width:100%;display:block;border-radius:8px}
+
+/* ---------- AUTH ---------- */
+.auth{z-index:9999;position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:15px;padding:30px;text-align:center;}
+.auth h1{color:var(--accent);margin-bottom:10px}
+.auth input{width:260px;padding:12px 15px;border:2px solid #333;border-radius:25px;color:var(--text);}
+.auth button{width:260px;padding:12px;border-radius:25px;background:var(--accent);color:#000;font-weight:bold;cursor:pointer;}
+
+/* ---------- LAYOUT ---------- */
+.app{width:100%;max-width:420px;height:100vh;background:var(--bg);display:flex;flex-direction:column;}
+header{padding:12px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #222}
+header .logo{font-size:22px;font-weight:bold;color:var(--accent)}
+header input{flex:1;padding:8px 14px;border:1px solid #333;border-radius:20px;font-size:14px}
+header button{font-size:18px;color:var(--accent)}
+
+/* ---------- TABS ---------- */
+.tabs{display:flex;border-bottom:1px solid #222}
+.tabs button{flex:1;padding:12px;font-size:14px;opacity:.6}
+.tabs button.active{opacity:1;border-bottom:2px solid var(--accent)}
+
+/* ---------- LIST ---------- */
+.list{flex:1;overflow-y:auto;padding:10px}
+.item{background:var(--card);padding:12px;border-radius:12px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.item img.avatar{width:48px;height:48px;border-radius:50%;background:var(--accent);}
+.item .name{flex:1;font-weight:600}
+.item .snap{font-size:12px;opacity:.6}
+.badge{background:var(--accent);color:#000;font-size:11px;padding:2px 6px;border-radius:10px}
+
+/* ---------- CHAT ---------- */
+.chat{flex:1;display:flex;flex-direction:column}
+.chat-head{padding:12px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #222}
+.chat-head img{width:36px;height:36px;border-radius:50%;background:#444;}
+.chat-body{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px}
+.chat-body .snap{align-self:flex-start;background:#222;padding:10px 14px;border-radius:18px;max-width:70%;word-break:break-word}
+.chat-body .snap.me{align-self:flex-end;background:var(--accent);color:#000}
+.chat-body .snap img{margin-top:6px}
+.chat-foot{display:flex;align-items:center;gap:10px;padding:12px;border-top:1px solid #222}
+.chat-foot input{flex:1;padding:10px 14px;border:1px solid #333;border-radius:20px}
+.chat-foot button{font-size:18px;color:var(--accent)}
+
+/* ---------- VIEW-ONCE ---------- */
+.viewonce{z-index:9998;position:fixed;inset:0;background:#000;display:flex;justify-content:center;align-items:center}
+.viewonce img{max-height:90%;max-width:90%}
+.viewonce .close{position:absolute;top:20px;right:20px;font-size:28px;color:var(--accent);cursor:pointer}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-/* ===========================================================
-   RedRollChat – Single-File Discord Clone (Front-end only)
-   =========================================================== */
-(function(){
-/* ---------------  CONFIG  --------------- */
-const SERVER_URL = window.location.origin.replace(/^http/,'ws').replace(/:\d+/,':3000'); // adjust if needed
-const API_BASE   = window.location.origin.replace(/\/$/,'')+':3000/api';
-const MAX_FILE_MB = 25;
-const EMOJI_SET = ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','🎃','😺','😸','😹','😻','😼','😽','🙀','😿','😾','👋','🤚','🖐','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤝','🙏','✍️','💅','🤳','💪','🦾','🦵','🦿','🦶','👣','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁','👅','👄','💋','🩸','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🈳','🈂️','🛂','🛃','🛄','🛅','🚹','🚺','🚼','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🆖','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟','🔢','#️⃣','*️⃣','⏏️','▶️','⏸','⏯','⏹','⏺','⏭','⏮','⏩','⏪','⏫','⏬','◀️','🔼','🔽','➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↪️','↩️','⤴️','⤵️','🔀','🔁','🔂','🔄','🔃','🎵','🎶','➕','➖','➗','✖️','♾','💲','💱','™️','©️','®️','〰️','➰','➿','🔚','🔙','🔛','🔝','🔜','✔️','☑️','🔘','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔺','🔻','🔸','🔹','🔶','🔷','🔳','🔲','▪️','▫️','◾','◽','◼️','◻️','🟥','🟧','🟨','🟩','🟦','🟪','⬛','⬜','🟫','🔈','🔇','🔉','🔊','🔔','🔕','📣','📢','💬','💭','🗯','♠️','♣️','♥️','♦️','🃏','🎴','🀄','🕐','🕑','🕒','🕓','🕔','🕕','🕖','🕗','🕘','🕙','🕚','🕛','🕜','🕝','🕞','🕟','🕠','🕡','🕢','🕣','🕤','🕥','🕦','🕧'];
-/* ---------------  SMALL UTILS  --------------- */
-const storage = {
-  get(k){try{return JSON.parse(localStorage.getItem(k))}catch{return null}},
-  set(k,v){localStorage.setItem(k,JSON.stringify(v))},
-  clear(){localStorage.clear()}
+
+<!-- ================= AUTH ================= -->
+<div class="auth" id="auth">
+  <h1>SnapClone</h1>
+  <input id="authIn" placeholder="Pick a username" maxlength="20">
+  <button id="authGo">Sign Up</button>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="app" id="app" style="display:none">
+  <header>
+    <div class="logo">SnapClone</div>
+    <input id="searchIn" placeholder="Search username to add friend…">
+    <button id="addBtn"><i class="fas fa-user-plus"></i></button>
+  </header>
+
+  <div class="tabs">
+    <button class="active" id="reqTab">Requests <span id="reqCount"></span></button>
+    <button id="frTab">Friends</button>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <!-- chat screen (hidden by default) -->
+  <div class="chat" id="chat" style="display:none">
+    <div class="chat-head">
+      <button id="backBtn"><i class="fas fa-arrow-left"></i></button>
+      <img id="chatAva">
+      <div>
+        <div id="chatName">-</div>
+        <div style="font-size:12px;opacity:.6">Chat disappears after view</div>
+      </div>
+    </div>
+    <div class="chat-body" id="chatBody"></div>
+    <div class="chat-foot">
+      <input id="msgIn" placeholder="Type a snap…">
+      <button id="imgBtn"><i class="fas fa-camera"></i></button>
+      <input type="file" id="imgFile" accept="image/*" style="display:none">
+      <button id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1.  UTILS / BROADCAST
+=========================================================*/
+const bc=new BroadcastChannel('snap_clone');
+bc.onmessage=({data})=>{
+  if(data.type==='req')  handleIncomingReq(data.from);
+  if(data.type==='acc')  handleAccepted(data.from);
+  if(data.type==='snap') handleSnap(data);
 };
-const fmtTime = d=>new Date(d).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-const cls = (obj)=>Object.keys(obj).filter(k=>obj[k]).join(' ');
-/* ---------------  HTTP & WS  --------------- */
-let socket, me, token;
-const api = (()=>{
-  const auth=(h={})=>({...h,Authorization:`Bearer ${token}`});
-  const jsonBody=(d)=>({headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});
-  const handle=async(res)=>{
-    if(!res.ok)throw Object.assign(new Error((await res.json()).message||res.statusText),{status:res.status});
-    return res.status===204?null:res.json();
-  };
-  return {
-    login:(email,pass)=>fetch(API_BASE+'/auth/login',{method:'POST',...jsonBody({email,password})}).then(handle),
-    register:(u)=>fetch(API_BASE+'/auth/register',{method:'POST',...jsonBody(u)}).then(handle),
-    me:()=>fetch(API_BASE+'/auth/me',{headers:auth()}).then(handle),
-    servers:()=>fetch(API_BASE+'/servers',{headers:auth()}).then(handle),
-    createServer:(name)=>fetch(API_BASE+'/servers',{method:'POST',headers:auth(),...jsonBody({name})}).then(handle),
-    channels:(sid)=>fetch(API_BASE+`/servers/${sid}/channels`,{headers:auth()}).then(handle),
-    createChannel:(sid,data)=>fetch(API_BASE+`/servers/${sid}/channels`,{method:'POST',headers:auth(),...jsonBody(data)}).then(handle),
-    messages:(cid,before)=>fetch(API_BASE+`/channels/${cid}/messages?before=${before||''}`,{headers:auth()}).then(handle),
-    sendMessage:(cid,data)=>fetch(API_BASE+`/channels/${cid}/messages`,{method:'POST',headers:auth(),...jsonBody(data)}).then(handle),
-    deleteMessage:(mid)=>fetch(API_BASE+`/messages/${mid}`,{method:'DELETE',headers:auth()}).then(handle),
-    editMessage:(mid,content)=>fetch(API_BASE+`/messages/${mid}`,{method:'PATCH',headers:auth(),...jsonBody({content})}).then(handle),
-    addReaction:(mid,emoji)=>fetch(API_BASE+`/messages/${mid}/reactions/${encodeURIComponent(emoji)}`,{method:'PUT',headers:auth()}).then(handle),
-    removeReaction:(mid,emoji)=>fetch(API_BASE+`/messages/${mid}/reactions/${encodeURIComponent(emoji)}`,{method:'DELETE',headers:auth()}).then(handle),
-    invites:(sid)=>fetch(API_BASE+`/servers/${sid}/invites`,{headers:auth()}).then(handle),
-    createInvite:(sid,data)=>fetch(API_BASE+`/servers/${sid}/invites`,{method:'POST',headers:auth(),...jsonBody(data)}).then(handle),
-    roles:(sid)=>fetch(API_BASE+`/servers/${sid}/roles`,{headers:auth()}).then(handle),
-    upload:(file)=>{
-      const fd=new FormData();fd.append('file',file);
-      return fetch(API_BASE+'/upload',{method:'POST',headers:auth({}),body:fd}).then(handle);
-    },
-    joinVoice:(cid)=>fetch(API_BASE+`/channels/${cid}/voice/join`,{method:'POST',headers:auth()}).then(handle),
-    leaveVoice:()=>fetch(API_BASE+'/voice/leave',{method:'POST',headers:auth()}).then(handle),
-    webrtc:(data)=>fetch(API_BASE+'/voice/webrtc',{method:'POST',headers:auth(),...jsonBody(data)}).then(handle),
-    audit:(sid)=>fetch(API_BASE+`/servers/${sid}/audit`,{headers:auth()}).then(handle),
-  };
-})();
-/* ---------------  REACT HOOKS  --------------- */
-const {useState,useEffect,useRef,useCallback,useMemo,createContext,useContext}=React;
-const AppCtx=createContext(null);
-const useApp=()=>useContext(AppCtx);
-/* ---------------  TOP-LEVEL APP  --------------- */
-function App(){
-  const [loggedIn,setLoggedIn]=useState(false);
-  const [ready,setReady]=useState(false);
-  /* global state */
-  const [servers,setServers]=useState([]);
-  const [channels,setChannels]=useState([]);
-  const [members,setMembers]=useState([]);
-  const [messages,setMessages]=useState([]);
-  const [invites,setInvites]=useState([]);
-  const [roles,setRoles]=useState([]);
-  const [audit,setAudit]=useState([]);
-  const [voiceStates,setVoiceStates]=useState([]); // [{userId,speaking,stream}]
-  const [unreads,setUnreads]=useState({});
-  const [typing,setTyping]=useState({});
-  const [presences,setPresences]=useState({});
-  const [selected,setSelected]=useState({server:null,channel:null});
-  const [showModal,setShowModal]=useState(null);
-  const [theme,setTheme]=useState(storage.get('theme')||'dark');
-  const [offlineQueue,setOfflineQueue]=useState([]);
-  /* voice/webrtc */
-  const [voice,setVoice]=useState({connected:false,channelId:null,localStream:null,producers:{},consumers:{},device:null,transport:{send:null,recv:null}});
-  /* refs */
-  const msgEndRef=useRef(null);
-  const fileRef=useRef(null);
-  /* theme */
-  useEffect(()=>{
-    document.documentElement.setAttribute('data-theme',theme);
-    storage.set('theme',theme);
-  },[theme]);
-  /* auth restore */
-  useEffect(()=>{
-    (async()=>{
-      token=storage.get('token');
-      if(token){
-        try{
-          me=await api.me();
-          setLoggedIn(true);
-        }catch{token='';}
-      }
-      setReady(true);
-    })();
-  },[]);
-  /* socket connect */
-  useEffect(()=>{
-    if(!loggedIn){if(socket){socket.disconnect();socket=null;} return;}
-    socket=io(SERVER_URL,{auth:{token}});
-    socket.on('connect',()=>console.log('[ws] connected'));
-    socket.on('disconnect',()=>console.warn('[ws] disconnected'));
-    socket.on('error',e=>alert('Socket error: '+e.message));
-    socket.on('message_create',onMessageCreate);
-    socket.on('message_edit',onMessageEdit);
-    socket.on('message_delete',onMessageDelete);
-    socket.on('typing_start',onTypingStart);
-    socket.on('typing_stop',onTypingStop);
-    socket.on('presence_update',onPresenceUpdate);
-    socket.on('voice_state',onVoiceState);
-    socket.on('reaction_add',onReactionAdd);
-    socket.on('reaction_remove',onReactionRemove);
-    socket.on('channel_create',onChannelCreate);
-    socket.on('channel_delete',onChannelDelete);
-    socket.on('member_join',onMemberJoin);
-    socket.on('member_leave',onMemberLeave);
-    socket.on('role_update',onRoleUpdate);
-    return()=>socket.disconnect();
-  },[loggedIn]);
-  /* handlers */
-  const onMessageCreate=msg=>{
-    if(msg.channelId===selected.channel?.id){
-      setMessages(m=>[...m,msg]);
-      scrollToBottom();
-    }else{
-      setUnreads(u=>({...u,[msg.channelId]:(u[msg.channelId]||0)+1}));
-    }
-  };
-  const onMessageEdit=({id,content,editedAt})=>{
-    setMessages(m=>m.map(x=>x.id===id?{...x,content,editedAt}:x));
-  };
-  const onMessageDelete=({id})=>{
-    setMessages(m=>m.filter(x=>x.id!==id));
-  };
-  const onTypingStart=({userId,channelId})=>{
-    if(channelId!==selected.channel?.id)return;
-    setTyping(t=>({...t,[userId]:Date.now()+5000}));
-  };
-  const onTypingStop=({userId})=>{
-    setTyping(t=>{const n={...t};delete n[userId];return n;});
-  };
-  const onPresenceUpdate=({userId,status})=>{
-    setPresences(p=>({...p,[userId]:status}));
-  };
-  const onVoiceState=list=>{
-    setVoiceStates(list);
-  };
-  const onReactionAdd=({messageId,emoji,userId})=>{
-    setMessages(m=>m.map(x=>x.id===messageId?{...x,reactions:[...x.reactions.filter(r=>!(r.emoji===emoji&&r.userId===userId)),{emoji,userId}]}:x));
-  };
-  const onReactionRemove=({messageId,emoji,userId})=>{
-    setMessages(m=>m.map(x=>x.id===messageId?{...x,reactions:x.reactions.filter(r=>!(r.emoji===emoji&&r.userId===userId))}:x));
-  };
-  const onChannelCreate=ch=>{
-    if(ch.serverId===selected.server?.id)setChannels(c=>[...c,ch]);
-  };
-  const onChannelDelete=({id})=>{
-    setChannels(c=>c.filter(x=>x.id!==id));
-    if(selected.channel?.id===id)setSelected(s=>({...s,channel:null}));
-  };
-  const onMemberJoin=m=>{
-    setMembers(mem=>[...mem,m]);
-  };
-  const onMemberLeave=({userId})=>{
-    setMembers(mem=>mem.filter(x=>x.userId!==userId));
-  };
-  const onRoleUpdate=()=>{
-    loadRoles(selected.server.id);
-  };
-  /* loaders */
-  const loadServers=async()=>{setServers(await api.servers());};
-  const loadChannels=async(sid)=>{setChannels(await api.channels(sid));};
-  const loadMembers=async(sid)=>{
-    // stub – backend should expose /servers/:id/members
-    setMembers([]);
-  };
-  const loadMessages=async(cid,dir)=>{
-    const before=dir==='older'?messages[0]?.id:'';
-    const list=await api.messages(cid,before);
-    setMessages(m=>dir==='older'?[...list,...m]:list);
-    if(!dir)scrollToBottom();
-  };
-  const loadInvites=async(sid)=>{setInvites(await api.invites(sid));};
-  const loadRoles=async(sid)=>{setRoles(await api.roles(sid));};
-  const loadAudit=async(sid)=>{setAudit(await api.audit(sid));};
-  /* selection */
-  const selectServer=useCallback(async(s)=>{
-    setSelected({server:s,channel:null});
-    setChannels([]);
-    setMembers([]);
-    setMessages([]);
-    setInvites([]);
-    setRoles([]);
-    setAudit([]);
-    await loadChannels(s.id);
-    await loadMembers(s.id);
-  },[]);
-  const selectChannel=useCallback(async(ch)=>{
-    if(!ch)return;
-    setSelected(sel=>({...sel,channel:ch}));
-    setMessages([]);
-    setUnreads(u=>({...u,[ch.id]:0}));
-    await loadMessages(ch.id);
-    socket.emit('join_channel',ch.id);
-  },[]);
-  /* voice */
-  const joinVoice=async(ch)=>{
-    if(voice.connected)await leaveVoice();
-    const rsp=await api.joinVoice(ch.id);
-    const device=new mediasoupClient.Device();
-    await device.load({routerRtpCapabilities:rsp.routerRtpCapabilities});
-    const sendTransport=device.createSendTransport(rsp.sendTransport);
-    sendTransport.on('connect',async({dtlsParameters},cb,err)=>{try{await api.webrtc({type:'connect',transportId:sendTransport.id,dtlsParameters});cb()}catch(e){err(e)}});
-    sendTransport.on('produce',async({kind,rtpParameters},cb,err)=>{try{const {producerId}=await api.webrtc({type:'produce',transportId:sendTransport.id,kind,rtpParameters});cb({id:producerId})}catch(e){err(e)}});
-    const recvTransport=device.createRecvTransport(rsp.recvTransport);
-    recvTransport.on('connect',async({dtlsParameters},cb,err)=>{try{await api.webrtc({type:'connect',transportId:recvTransport.id,dtlsParameters});cb()}catch(e){err(e)}});
-    const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
-    const audioTrack=stream.getAudioTracks()[0];
-    const producer=await sendTransport.produce({track:audioTrack});
-    setVoice({connected:true,channelId:ch.id,localStream:stream,producers:{audio:producer},consumers:{},device,transport:{send:sendTransport,recv:recvTransport}});
-  };
-  const leaveVoice=async()=>{
-    if(!voice.connected)return;
-    voice.localStream?.getTracks().forEach(t=>t.stop());
-    if(voice.transport.send){voice.transport.send.close();}
-    if(voice.transport.recv){voice.transport.recv.close();}
-    await api.leaveVoice();
-    setVoice({connected:false,channelId:null,localStream:null,producers:{},consumers:{},device:null,transport:{send:null,recv:null}});
-  };
-  /* scroll */
-  const scrollToBottom=()=>setTimeout(()=>msgEndRef.current?.scrollIntoView({behavior:'smooth'}),100);
-  /* offline queue */
-  const pushQueue=async(type,payload)=>{
-    if(socket.connected){socket.emit(type,payload);return;}
-    setOfflineQueue(q=>[...q,{type,payload,ts:Date.now()}]);
-    await navigator.serviceWorker.ready;
-    // simple background sync stub
-  };
-  /* expose */
-  const ctx={
-    me,socket,api,servers,channels,members,messages,invites,roles,audit,voiceStates,unreads,typing,presences,selected,voice,theme,setTheme,showModal,setShowModal,
-    loadServers,loadChannels,loadMembers,loadMessages,loadInvites,loadRoles,loadAudit,
-    selectServer,selectChannel,joinVoice,leaveVoice,pushQueue,fileRef
-  };
-  return loggedIn?(
-    <AppCtx.Provider value={ctx}>
-      <div className="app">
-        <ServerList/>
-        <ChannelPanel/>
-        <ChatArea/>
-        <MemberList/>
-        <ModalManager/>
-      </div>
-      <VoiceBar/>
-    </AppCtx.Provider>
-  ):ready?<Login/>:<div className="flex-1 center">Loading…</div>
+function broadcast(msg){bc.postMessage(msg)}
+
+/* =========================================================
+   2.  AUTH
+=========================================================*/
+const authIn=document.getElementById('authIn');
+document.getElementById('authGo').onclick=()=>{
+  const u=authIn.value.trim().toLowerCase();
+  if(!u){alert('Username required');return}
+  if(localStorage.getItem('user_'+u)){alert('Username taken');return}
+  localStorage.setItem('me',u);
+  localStorage.setItem('user_'+u,JSON.stringify({name:u,ava:genAva(u)}));
+  init();
+};
+function genAva(name){
+  const c=document.createElement('canvas');c.width=100;c.height=100;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#fffc00';ctx.fillRect(0,0,100,100);
+  ctx.fillStyle='#000';ctx.font='bold 40px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(name.slice(0,2).toUpperCase(),50,50);
+  return c.toDataURL();
 }
-/* ===========================================================
-   COMPONENTS
-   =========================================================== */
-function Login(){
-  const [tab,setTab]=useState('login');
-  const [email,setEmail]=useState('');
-  const [pass,setPass]=useState('');
-  const [name,setName]=useState('');
-  const [loading,setLoading]=useState(false);
-  const submit=async(e)=>{
-    e.preventDefault();setLoading(true);
-    try{
-      if(tab==='login'){
-        const {token:t}=await api.login(email,pass);
-        token=t;storage.set('token',t);me=await api.me();window.location.reload();
-      }else{
-        const {token:t}=await api.register({username:name,email,password:pass});
-        token=t;storage.set('token',t);me=await api.me();window.location.reload();
-      }
-    }catch(err){alert(err.message);}
-    setLoading(false);
-  };
-  return (
-    <div className="flex-1 center column gap-12" style={{maxWidth:400,margin:'auto'}}>
-      <h2>RedRollChat</h2>
-      <form onSubmit={submit} className="column gap-12">
-        {tab==='register'&&<input placeholder="Display name" value={name} onChange={e=>setName(e.target.value)} required/>}
-        <input type="email" placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required/>
-        <input type="password" placeholder="Password" value={pass} onChange={e=>setPass(e.target.value)} required minLength={6}/>
-        <button type="submit" disabled={loading}>{tab==='login'?'Login':'Create account'}</button>
-      </form>
-      <button className="text-muted" style={{background:'none'}} onClick={()=>setTab(t=>t==='login'?'register':'login')}>
-        {tab==='login'?'Need an account? Register':'Already have one? Login'}
-      </button>
-    </div>
-  );
+
+/* =========================================================
+   3.  STATE
+=========================================================*/
+let me=null,activeFriend=null,requests=[],friends=[];
+
+/* =========================================================
+   4.  INIT
+=========================================================*/
+function init(){
+  me=localStorage.getItem('me');
+  if(!me){document.getElementById('auth').style.display='flex';return}
+  document.getElementById('auth').style.display='none';
+  document.getElementById('app').style.display='flex';
+  loadLists();
+  hookEvents();
 }
-function ServerList(){
-  const {servers,selectServer,selected,setShowModal}=useApp();
-  return (
-    <div className="server-list">
-      {servers.map(s=>(
-        <img key={s.id} src={s.icon||`https://via.placeholder.com/48/5865f2/ffffff?text=${s.name[0]}`} alt={s.name} title={s.name}
-          className={cls({active:selected.server?.id===s.id})} onClick={()=>selectServer(s)}/>
-      ))}
-      <button onClick={()=>setShowModal('create-server')} style={{borderRadius:'50%',width:48,height:48,fontSize:24}}>＋</button>
-    </div>
-  );
+init();
+
+/* =========================================================
+   5.  FRIEND REQUESTS
+=========================================================*/
+document.getElementById('addBtn').onclick=()=>{
+  const q=document.getElementById('searchIn').value.trim().toLowerCase();
+  if(!q||q===me){alert('Invalid username');return}
+  if(!localStorage.getItem('user_'+q)){alert('User not found');return}
+  if(requests.includes(q)||friends.includes(q)){alert('Already friends or pending');return}
+  // send request
+  broadcast({type:'req',from:me});
+  alert('Request sent!');
+};
+function handleIncomingReq(from){
+  if(!requests.includes(from))requests.push(from);
+  saveLists();loadLists();
 }
-function ChannelPanel(){
-  const {channels,selected,selectChannel,setShowModal}=useApp();
-  const cats=useMemo(()=>{
-    const m=new Map();
-    channels.forEach(ch=>{
-      const key=ch.category||'';
-      if(!m.has(key))m.set(key,[]);
-      m.get(key).push(ch);
-    });
-    return [...m.entries()];
-  },[channels]);
-  return (
-    <div className="channel-panel">
-      <div className="channel-header truncate">{selected.server?.name||'Server'}</div>
-      <div className="channel-list">
-        {cats.map(([cat,list])=>(
-          <div key={cat}>
-            {cat&&<div className="text-sm text-muted mt-8" style={{padding:'4px 16px'}}>{cat}</div>}
-            {list.map(ch=>(
-              <div key={ch.id} className={cls({active:selected.channel?.id===ch.id})} className="channel-item" onClick={()=>selectChannel(ch)}>
-                <span className="icon">{ch.type==='voice'?'🔊':'#️⃣'}</span>
-                <span className="truncate">{ch.name}</span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-      <button onClick={()=>setShowModal('create-channel')} className="mt-12" style={{margin:16}}>New Channel</button>
-    </div>
-  );
+function acceptRequest(from){
+  requests=requests.filter(r=>r!==from);
+  if(!friends.includes(from))friends.push(from);
+  saveLists();loadLists();
+  broadcast({type:'acc',from:me});
 }
-function ChatArea(){
-  const {selected,messages,typing,voice,pushQueue,fileRef}=useApp();
-  const [input,setInput]=useState('');
-  const [reply,setReply]=useState(null);
-  const [older,setOlder]=useState(false);
-  const listRef=useRef(null);
-  const onSend=async()=>{
-    if(!input.trim())return;
-    const content=input.trim();
-    setInput('');
-    const payload={content,replyTo:reply?.id||null};
-    setReply(null);
-    try{
-      const msg=await api.sendMessage(selected.channel.id,payload);
-      pushQueue('message_create',msg);
-    }catch(err){alert(err.message);}
-  };
-  const onAttach=async()=>{
-    const f=fileRef.current.files[0];if(!f)return;
-    if(f.size>MAX_FILE_MB*1024*1024){alert('File too big');return;}
-    const url=await api.upload(f);
-    const msg=await api.sendMessage(selected.channel.id,{content:'',attachments:[url]});
-    pushQueue('message_create',msg);
-  };
-  const onKey=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();onSend();}};
-  useEffect(()=>{
-    if(!selected.channel)return;
-    const t=setInterval(()=>socket.emit('typing',{channelId:selected.channel.id,isTyping:input.length>0}),2000);
-    return()=>clearInterval(t);
-  },[input,selected.channel]);
-  useEffect(()=>{
-    const el=listRef.current;
-    const onScroll=()=>{if(el.scrollTop===0&&!older){setOlder(true);}};
-    el?.addEventListener('scroll',onScroll);
-    return()=>el?.removeEventListener('scroll',onScroll);
-  },[older]);
-  if(!selected.channel)return <div className="flex-1 center">Select a channel</div>;
-  return (
-    <div className="chat-area">
-      <div className="chat-header">{selected.channel.name}</div>
-      <div className="message-list" ref={listRef}>
-        {older&&<button onClick={()=>{setOlder(false);}}>Load older</button>}
-        {messages.map(m=><MessageItem key={m.id} msg={m} reply={setReply}/>)}
-        <div ref={useApp().msgEndRef}/>
-      </div>
-      <div className="chat-input-area">
-        <input type="file" ref={fileRef} onChange={onAttach} style={{display:'none'}} accept="image/*,video/*,.pdf"/>
-        <button onClick={()=>fileRef.current.click()}>📎</button>
-        {reply&&<div className="text-sm text-muted">Replying to {reply.author.username}<button onClick={()=>setReply(null)}>❌</button></div>}
-        <textarea className="chat-input" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={onKey} placeholder={`Message #${selected.channel.name}`}/>
-        <button onClick={onSend} disabled={!input.trim()}>Send</button>
-      </div>
-    </div>
-  );
+function handleAccepted(from){
+  if(!friends.includes(from))friends.push(from);
+  saveLists();loadLists();
 }
-function MessageItem({msg,reply}){
-  const {me,messages,setMessages}=useApp();
-  const [edit,setEdit]=useState(null);
-  const [showEmoji,setShowEmoji]=useState(false);
-  const saveEdit=async()=>{
-    try{
-      await api.editMessage(msg.id,edit);
-      setEdit(null);
-    }catch(err){alert(err.message);}
-  };
-  const del=async()=>{
-    if(!confirm('Delete message?'))return;
-    await api.deleteMessage(msg.id);
-  };
-  const toggleReact=async(emoji)=>{
-    const has=msg.reactions.find(r=>r.emoji===emoji&&r.userId===me.id);
-    if(has)await api.removeReaction(msg.id,emoji);else await api.addReaction(msg.id,emoji);
-  };
-  return (
-    <div className="message">
-      <img src={msg.author.avatar||`https://via.placeholder.com/40/5865f2/ffffff?text=${msg.author.username[0]}`} alt="" className="message-avatar"/>
-      <div className="message-body">
-        <div className="message-header">
-          <span className="message-author">{msg.author.username}</span>
-          <span className="message-time">{fmtTime(msg.createdAt)}</span>
-          {msg.editedAt&&<span className="text-muted text-sm">(edited)</span>}
-          {msg.author.id===me.id&&<>
-            <button className="text-sm" onClick={()=>setEdit(msg.content)}>Edit</button>
-            <button className="text-sm" onClick={del}>Delete</button>
-          </>}
-          <button className="text-sm" onClick={()=>reply(msg)}>Reply</button>
-        </div>
-        {edit===null?(
-          <div className="message-content">
-            <span>{msg.content}</span>
-            {msg.attachments.map(a=><img key={a} src={a} alt="" className="mt-8"/>)}
-            {msg.embeds.map((e,i)=><div key={i} className="message-embed">{e.title&&<strong>{e.title}</strong>}<div>{e.description}</div></div>)}
-            {msg.reactions.length>0&&<div className="gap-8 flex mt-8">{
-              [...new Set(msg.reactions.map(r=>r.emoji))].map(emoji=>{
-                const count=msg.reactions.filter(r=>r.emoji===emoji).length;
-                return <button key={emoji} onClick={()=>toggleReact(emoji)}>{emoji} {count}</button>;
-              })
-            }</div>}
-            <button onClick={()=>setShowEmoji(s=>!s)}>😀</button>
-            {showEmoji&&<div className="emoji-picker">{
-              EMOJI_SET.map(e=><div key={e} className="emoji-cell" onClick={()=>{toggleReact(e);setShowEmoji(false);}}>{e}</div>)
-            }</div>}
-          </div>
-        ):(
-          <div className="gap-12 flex">
-            <textarea className="flex-1" value={edit} onChange={e=>setEdit(e.target.value)}/>
-            <button onClick={saveEdit}>Save</button>
-            <button onClick={()=>setEdit(null)}>Cancel</button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+
+/* =========================================================
+   6.  LISTS UI
+=========================================================*/
+function saveLists(){
+  localStorage.setItem('req',JSON.stringify(requests));
+  localStorage.setItem('fr',JSON.stringify(friends));
 }
-function MemberList(){
-  const {members}=useApp();
-  return (
-    <div className="member-list">
-      <div className="text-muted text-sm">MEMBERS — {members.length}</div>
-      {members.map(m=>(
-        <div key={m.userId} className="member-item">
-          <img src={m.avatar||`https://via.placeholder.com/32/5865f2/ffffff?text=${m.username[0]}`} alt="" className="member-avatar"/>
-          <div className="truncate">{m.username}</div>
-        </div>
-      ))}
-    </div>
-  );
+function loadLists(){
+  requests=JSON.parse(localStorage.getItem('req')||'[]');
+  friends=JSON.parse(localStorage.getItem('fr')||'[]');
+  renderList();
 }
-function VoiceBar(){
-  const {voice,leaveVoice}=useApp();
-  const [ptt,setPtt]=useState(false);
-  const toggleMic=()=>{
-    const audio=voice.localStream?.getAudioTracks()[0];
-    if(audio)audio.enabled=!audio.enabled;
-  };
-  return voice.connected?(
-    <div className="voice-bar">
-      <div className="voice-user">
-        <span>🔊 Voice — {voice.channelId}</span>
-      </div>
-      <div className="voice-controls">
-        <button onClick={toggleMic}>Mic</button>
-        <button onClick={leaveVoice}>Disconnect</button>
-      </div>
-    </div>
-  ):null;
+function renderList(){
+  const list=document.getElementById('list');
+  const isReq=document.getElementById('reqTab').classList.contains('active');
+  list.innerHTML='';
+  document.getElementById('reqCount').textContent=requests.length?` (${requests.length})`:'';
+  const src=isReq?requests:friends;
+  src.forEach(name=>{
+    const u=JSON.parse(localStorage.getItem('user_'+name)||'{}');
+    const div=document.createElement('div');div.className='item';
+    div.innerHTML=`
+      <img class="avatar" src="${u.ava||genAva(name)}">
+      <div class="name">${name}</div>
+      ${isReq?'<button class="badge">Accept</button>':''}
+    `;
+    div.onclick=(e)=>{
+      if(isReq&&e.target.tagName==='BUTTON')acceptRequest(name);
+      else openChat(name);
+    };
+    list.appendChild(div);
+  });
 }
-function ModalManager(){
-  const {showModal,setShowModal}=useApp();
-  if(!showModal)return null;
-  return (
-    <div className="modal-overlay" onClick={()=>setShowModal(null)}>
-      <div className="modal" onClick={e=>e.stopPropagation()}>
-        {showModal==='create-server'&&<CreateServer onClose={()=>setShowModal(null)}/>}
-        {showModal==='create-channel'&&<CreateChannel onClose={()=>setShowModal(null)}/>}
-      </div>
-    </div>
-  );
+document.getElementById('reqTab').onclick=()=>{switchTab(true)};
+document.getElementById('frTab').onclick=()=>{switchTab(false)};
+function switchTab(req){
+  document.getElementById('reqTab').classList.toggle('active',req);
+  document.getElementById('frTab').classList.toggle('active',!req);
+  renderList();
 }
-function CreateServer({onClose}){
-  const [name,setName]=useState('');
-  const {loadServers}=useApp();
-  const submit=async()=>{
-    if(!name.trim())return;
-    await api.createServer(name);
-    await loadServers();
-    onClose();
-  };
-  return (
-    <>
-      <div className="modal-header">Create Server</div>
-      <div className="modal-body">
-        <label>Server name</label>
-        <input value={name} onChange={e=>setName(e.target.value)} placeholder="My Server"/>
-      </div>
-      <div className="modal-footer">
-        <button onClick={onClose}>Cancel</button>
-        <button onClick={submit}>Create</button>
-      </div>
-    </>
-  );
+
+/* =========================================================
+   7.  CHAT
+=========================================================*/
+function openChat(name){
+  activeFriend=name;
+  const u=JSON.parse(localStorage.getItem('user_'+name)||'{}');
+  document.getElementById('chatName').textContent=name;
+  document.getElementById('chatAva').src=u.ava||genAva(name);
+  document.getElementById('list').style.display='none';
+  document.querySelector('.tabs').style.display='none';
+  document.getElementById('chat').style.display='flex';
+  document.getElementById('msgIn').focus();
+  // mark any unread as read
+  const key='unread_'+me+'_'+name;
+  if(localStorage.getItem(key)){localStorage.removeItem(key);loadLists();}
 }
-function CreateChannel({onClose}){
-  const [name,setName]=useState('');
-  const [type,setType]=useState('text');
-  const {selected,loadChannels}=useApp();
-  const submit=async()=>{
-    if(!name.trim())return;
-    await api.createChannel(selected.server.id,{name,type});
-    await loadChannels(selected.server.id);
-    onClose();
-  };
-  return (
-    <>
-      <div className="modal-header">Create Channel</div>
-      <div className="modal-body">
-        <label>Channel name</label>
-        <input value={name} onChange={e=>setName(e.target.value)} placeholder="new-channel"/>
-        <label>Type</label>
-        <select value={type} onChange={e=>setType(e.target.value)}>
-          <option value="text">Text</option>
-          <option value="voice">Voice</option>
-        </select>
-      </div>
-      <div className="modal-footer">
-        <button onClick={onClose}>Cancel</button>
-        <button onClick={submit}>Create</button>
-      </div>
-    </>
-  );
+document.getElementById('backBtn').onclick=()=>{
+  activeFriend=null;
+  document.getElementById('chat').style.display='none';
+  document.getElementById('list').style.display='block';
+  document.querySelector('.tabs').style.display='flex';
+};
+
+/* =========================================================
+   8.  SEND SNAPS
+=========================================================*/
+document.getElementById('sendBtn').onclick=()=>sendSnap();
+document.getElementById('msgIn').onkeypress=(e)=>{
+  if(e.key==='Enter')sendSnap();
+};
+document.getElementById('imgBtn').onclick=()=>document.getElementById('imgFile').click();
+document.getElementById('imgFile').onchange=(e)=>{
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>sendSnap('',ev.target.result);
+  r.readAsDataURL(file);
+  e.target.value='';
+};
+function sendSnap(text='',img=null){
+  if(!text&&!img)return;
+  const time=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  const id=Date.now()+Math.random().toString(36).slice(2);
+  const snap={from:me,to:activeFriend,text,img,time,id};
+  broadcast({type:'snap',...snap});
+  showSnap(snap,true);
+  // self-destruct after view
+  setTimeout(()=>document.querySelector(`[data-id="${id}"]`)?.remove(),10000);
 }
-/* ===========================================================
-   MOUNT
-   =========================================================== */
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-})();
+function handleSnap(s){
+  if(s.to!==me)return;
+  showSnap(s,false);
+  // mark unread dot
+  const key='unread_'+me+'_'+s.from;
+  localStorage.setItem(key,'1');
+  loadLists();
+}
+function showSnap(s,own){
+  const body=document.getElementById('chatBody');
+  const div=document.createElement('div');div.className='snap '+(own?'me':'');
+  div.dataset.id=s.id;
+  if(s.text)div.insertAdjacentHTML('afterbegin',`<div>${linkify(s.text)}</div>`);
+  if(s.img){
+    const img=document.createElement('img');img.src=s.img;
+    img.onclick=()=>viewOnce(img);
+    div.appendChild(img);
+  }
+  div.insertAdjacentHTML('beforeend',`<div style="font-size:10px;opacity:.6">${s.time}</div>`);
+  body.appendChild(div);
+  body.scrollTop=body.scrollHeight;
+  // auto-remove
+  setTimeout(()=>div.remove(),10000);
+}
+function viewOnce(img){
+  const overlay=document.createElement('div');overlay.className='viewonce';
+  const big=document.createElement('img');big.src=img.src;
+  const close=document.createElement('div');close.className='close';close.innerHTML='&times;';
+  overlay.append(big,close);document.body.appendChild(overlay);
+  close.onclick=()=>overlay.remove();
+  overlay.onclick=()=>overlay.remove();
+  setTimeout(()=>overlay.remove(),5000); // snap timer
+}
+function linkify(t){
+  return t.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank" style="color:inherit;text-decoration:underline">$1</a>');
+}
+
+/* =========================================================
+   9.  EVENTS
+=========================================================*/
+function hookEvents(){
+  // nothing extra needed
+}
 </script>
 </body>
 </html>
