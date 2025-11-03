@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - ANIMAX</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2D1B69;
+            --secondary: #E91E63;
+            --accent: #00BCD4;
+            --bg: #121212;
+            --text: #FFFFFF;
+            --text-secondary: #B3B3B3;
+            --glow-purple: rgba(45, 27, 105, 0.8);
+            --glow-pink: rgba(233, 30, 99, 0.6);
+            --glow-blue: rgba(0, 188, 212, 0.7);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 10px var(--glow-pink));
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--glow-blue);
+            width: 300px;
+        }
+
+        .search-bar::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--glow-blue);
+        }
+
+        /* Main Container */
+        .main-container {
+            padding-top: 80px;
+            min-height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 80px 2rem 2rem;
+        }
+
+        /* Profile Header */
+        .profile-header {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            object-fit: cover;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-level {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Watchlist Sections */
+        .watchlist-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .view-all {
+            font-size: 0.9rem;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .view-all:hover {
+            color: var(--accent);
+        }
+
+        /* Watchlist Tabs */
+        .watchlist-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-button:hover {
+            color: var(--accent);
+        }
+
+        /* Anime Items */
+        .anime-items {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .anime-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .anime-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px var(--glow-purple);
+        }
+
+        .anime-thumbnail {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .anime-info {
+            flex: 1;
+        }
+
+        .anime-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text);
+        }
+
+        .anime-progress {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .anime-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--accent);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Statistics Panel */
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .stats-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .stats-chart {
+            height: 250px;
+            margin-top: 1rem;
+        }
+
+        /* Achievements */
+        .achievements-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .achievement-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .achievement-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px var(--glow-blue);
+        }
+
+        .achievement-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .achievement-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .achievement-desc {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .setting-group {
+            margin-bottom: 2rem;
+        }
+
+        .setting-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .setting-input, .setting-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .setting-input:focus, .setting-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--glow-blue);
+        }
+
+        .setting-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(26px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .achievement-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">ANIMAX</a>
+            
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="library.html">Library</a></li>
+                <li><a href="watch.html">Watch</a></li>
+                <li><a href="profile.html">Profile</a></li>
+            </ul>
+
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search anime...">
+            </div>
+
+            <div class="user-menu">
+                <img src="resources/user-avatars.png" alt="User Avatar" class="user-avatar">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <img src="resources/user-avatars.png" alt="Profile Avatar" class="profile-avatar">
+            <div class="profile-info">
+                <h1 class="profile-name">Anime Enthusiast</h1>
+                <div class="profile-level">Level 15 • Elite Watcher</div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="watchedCount">127</div>
+                        <div class="stat-label">Anime Watched</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="episodeCount">3,456</div>
+                        <div class="stat-label">Episodes</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="watchTime">89</div>
+                        <div class="stat-label">Days Watched</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="ratingCount">89</div>
+                        <div class="stat-label">Reviews</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Main Content -->
+            <div>
+                <!-- Currently Watching -->
+                <div class="watchlist-section">
+                    <h2 class="section-title">
+                        Currently Watching
+                        <span class="view-all">View All</span>
+                    </h2>
+                    <div class="anime-items" id="currentlyWatching">
+                        <!-- Anime items will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Watchlist Tabs -->
+                <div class="watchlist-section">
+                    <div class="watchlist-tabs">
+                        <button class="tab-button active" onclick="switchTab('watching', this)">Watching</button>
+                        <button class="tab-button" onclick="switchTab('completed', this)">Completed</button>
+                        <button class="tab-button" onclick="switchTab('plan-to-watch', this)">Plan to Watch</button>
+                        <button class="tab-button" onclick="switchTab('dropped', this)">Dropped</button>
+                    </div>
+                    <div class="anime-items" id="watchlistItems">
+                        <!-- Watchlist items will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <!-- Statistics Panel -->
+                <div class="stats-panel">
+                    <h3 class="stats-title">Viewing Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number">4.7</div>
+                            <div class="stat-label">Avg Rating</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">Sci-Fi</div>
+                            <div class="stat-label">Favorite Genre</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">24</div>
+                            <div class="stat-label">Avg Episodes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">2024</div>
+                            <div class="stat-label">Active Year</div>
+                        </div>
+                    </div>
+                    <div class="stats-chart" id="viewingChart"></div>
+                </div>
+
+                <!-- Achievements Panel -->
+                <div class="achievements-panel">
+                    <h3 class="stats-title">Achievements</h3>
+                    <div class="achievement-grid">
+                        <div class="achievement-item">
+                            <div class="achievement-icon">🏆</div>
+                            <div class="achievement-title">First Watch</div>
+                            <div class="achievement-desc">Completed first anime</div>
+                        </div>
+                        <div class="achievement-item">
+                            <div class="achievement-icon">⭐</div>
+                            <div class="achievement-title">Critic</div>
+                            <div class="achievement-desc">Wrote 50 reviews</div>
+                        </div>
+                        <div class="achievement-item">
+                            <div class="achievement-icon">🔥</div>
+                            <div class="achievement-title">Binge Watcher</div>
+                            <div class="achievement-desc">Watched 100+ episodes</div>
+                        </div>
+                        <div class="achievement-item">
+                            <div class="achievement-icon">💎</div>
+                            <div class="achievement-title">Connoisseur</div>
+                            <div class="achievement-desc">100 anime completed</div>
+                        </div>
+                        <div class="achievement-item">
+                            <div class="achievement-icon">🌟</div>
+                            <div class="achievement-title">Elite</div>
+                            <div class="achievement-desc">Reached level 15</div>
+                        </div>
+                        <div class="achievement-item">
+                            <div class="achievement-icon">📚</div>
+                            <div class="achievement-title">Librarian</div>
+                            <div class="achievement-desc">Added 500 to watchlist</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Panel -->
+                <div class="settings-panel">
+                    <h3 class="stats-title">Profile Settings</h3>
+                    
+                    <div class="setting-group">
+                        <label class="setting-label">Display Name</label>
+                        <input type="text" class="setting-input" value="Anime Enthusiast" id="displayName">
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-label">Email</label>
+                        <input type="email" class="setting-input" value="user@animax.com" id="email">
+                    </div>
+
+                    <div class="setting-group">
+                        <label class="setting-label">Favorite Genre</label>
+                        <select class="setting-select" id="favoriteGenre">
+                            <option value="">Select Genre</option>
+                            <option value="action">Action</option>
+                            <option value="romance">Romance</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="sci-fi">Sci-Fi</option>
+                            <option value="slice-of-life">Slice of Life</option>
+                            <option value="drama">Drama</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-toggle">
+                        <span>Email Notifications</span>
+                        <div class="toggle-switch active" onclick="toggleSetting(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <div class="setting-toggle">
+                        <span>Public Profile</span>
+                        <div class="toggle-switch active" onclick="toggleSetting(this)">
+                            <div class="toggle-slider"></div>
+                        </div>
+                    </div>
+
+                    <button class="action-button btn-primary" style="width: 100%; margin-top: 1rem;" onclick="saveSettings()">
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        const currentlyWatchingData = [
+            {
+                title: "Crystal Guardians",
+                progress: 18,
+                total: 36,
+                image: "resources/magical-girl-2.jpg"
+            },
+            {
+                title: "Fantasy Realm Adventures",
+                progress: 24,
+                total: 52,
+                image: "resources/fantasy-art.jpg"
+            },
+            {
+                title: "Action Heroes United",
+                progress: 12,
+                total: 36,
+                image: "resources/action-adventure.jpg"
+            }
+        ];
+
+        const watchlistData = {
+            'watching': [
+                {
+                    title: "Crystal Guardians",
+                    progress: 18,
+                    total: 36,
+                    image: "resources/magical-girl-2.jpg"
+                },
+                {
+                    title: "Fantasy Realm Adventures",
+                    progress: 24,
+                    total: 52,
+                    image: "resources/fantasy-art.jpg"
+                }
+            ],
+            'completed': [
+                {
+                    title: "Sakura Magic Warriors",
+                    progress: 24,
+                    total: 24,
+                    image: "resources/magical-girl-1.png"
+                },
+                {
+                    title: "Love in Tokyo",
+                    progress: 12,
+                    total: 12,
+                    image: "resources/romantic-1.jpg"
+                },
+                {
+                    title: "School Days Memories",
+                    progress: 24,
+                    total: 24,
+                    image: "resources/slice-of-life.jpg"
+                }
+            ],
+            'plan-to-watch': [
+                {
+                    title: "Mecha Revolution",
+                    progress: 0,
+                    total: 48,
+                    image: "resources/mecha-robot.jpg"
+                },
+                {
+                    title: "Neon City Blues",
+                    progress: 0,
+                    total: 18,
+                    image: "resources/characters-wallpaper.jpg"
+                }
+            ],
+            'dropped': [
+                {
+                    title: "Cosmic Adventures",
+                    progress: 8,
+                    total: 42,
+                    image: "resources/adventure-2.jpg"
+                }
+            ]
+        };
+
+        let currentTab = 'watching';
+
+        // Initialize profile page
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeProfile();
+        });
+
+        function initializeProfile() {
+            populateCurrentlyWatching();
+            populateWatchlist();
+            initializeChart();
+            animateStats();
+        }
+
+        function populateCurrentlyWatching() {
+            const container = document.getElementById('currentlyWatching');
+            
+            currentlyWatchingData.forEach(anime => {
+                const item = createAnimeItem(anime);
+                container.appendChild(item);
+            });
+        }
+
+        function populateWatchlist() {
+            const container = document.getElementById('watchlistItems');
+            container.innerHTML = '';
+            
+            const animeList = watchlistData[currentTab] || [];
+            
+            animeList.forEach(anime => {
+                const item = createAnimeItem(anime);
+                container.appendChild(item);
+            });
+        }
+
+        function createAnimeItem(anime) {
+            const item = document.createElement('div');
+            item.className = 'anime-item';
+            
+            const progressPercentage = (anime.progress / anime.total) * 100;
+            const statusText = anime.progress === 0 ? 'Not started' : 
+                              anime.progress === anime.total ? 'Completed' : 
+                              `${anime.progress}/${anime.total} episodes`;
+            
+            item.innerHTML = `
+                <img src="${anime.image}" alt="${anime.title}" class="anime-thumbnail">
+                <div class="anime-info">
+                    <div class="anime-title">${anime.title}</div>
+                    <div class="anime-progress">${statusText}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+                    </div>
+                </div>
+                <div class="anime-actions">
+                    <button class="action-button btn-primary" onclick="continueWatching('${anime.title}')">
+                        ${anime.progress === 0 ? 'Start' : 'Continue'}
+                    </button>
+                    <button class="action-button btn-secondary" onclick="removeFromList('${anime.title}')">
+                        Remove
+                    </button>
+                </div>
+            `;
+            
+            return item;
+        }
+
+        function switchTab(tab, button) {
+            currentTab = tab;
+            
+            // Update button states
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+            
+            populateWatchlist();
+        }
+
+        function initializeChart() {
+            const chartDom = document.getElementById('viewingChart');
+            const myChart = echarts.init(chartDom);
+            
+            const option = {
+                backgroundColor: 'transparent',
+                textStyle: {
+                    color: '#ffffff'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderColor: '#00BCD4',
+                    textStyle: {
+                        color: '#ffffff'
+                    }
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    axisLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.3)'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#ffffff'
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.3)'
+                        }
+                    },
+                    axisLabel: {
+                        color: '#ffffff'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Episodes Watched',
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: {
+                        color: '#E91E63',
+                        width: 3
+                    },
+                    itemStyle: {
+                        color: '#E91E63'
+                    },
+                    areaStyle: {
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 0,
+                            y2: 1,
+                            colorStops: [{
+                                offset: 0, color: 'rgba(233, 30, 99, 0.3)'
+                            }, {
+                                offset: 1, color: 'rgba(233, 30, 99, 0.05)'
+                            }]
+                        }
+                    },
+                    data: [45, 62, 38, 89, 76, 94]
+                }]
+            };
+            
+            myChart.setOption(option);
+        }
+
+        function animateStats() {
+            const statNumbers = document.querySelectorAll('.stat-number');
+            
+            const observerOptions = {
+                threshold: 0.5
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const target = entry.target;
+                        const finalValue = parseInt(target.textContent.replace(/,/g, ''));
+                        animateNumber(target, 0, finalValue, 2000);
+                        observer.unobserve(target);
+                    }
+                });
+            }, observerOptions);
+            
+            statNumbers.forEach(stat => {
+                observer.observe(stat);
+            });
+        }
+
+        function animateNumber(element, start, end, duration) {
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const current = Math.floor(start + (end - start) * progress);
+                element.textContent = current.toLocaleString();
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        function continueWatching(animeTitle) {
+            showNotification(`Continuing ${animeTitle}...`, 'info');
+            setTimeout(() => {
+                window.location.href = 'watch.html';
+            }, 1000);
+        }
+
+        function removeFromList(animeTitle) {
+            showNotification(`Removed ${animeTitle} from list`, 'info');
+            // In a real app, this would update the data and re-render
+        }
+
+        function toggleSetting(toggle) {
+            toggle.classList.toggle('active');
+        }
+
+        function saveSettings() {
+            const displayName = document.getElementById('displayName').value;
+            const email = document.getElementById('email').value;
+            const favoriteGenre = document.getElementById('favoriteGenre').value;
+            
+            showNotification('Settings saved successfully!', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                z-index: 10000;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
