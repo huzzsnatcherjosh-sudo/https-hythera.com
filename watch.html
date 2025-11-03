@@ -2,790 +2,199 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Watch - ANIMAX</title>
-    
-    <!-- External Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
-    
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-    
+    <title>ANIMAX – Watch Instantly (Zero Ads)</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <style>
+        :root {
+            --bg: #121212;
+            --accent: #00BCD4;
+            --text: #fff;
+        }
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
         }
-
-        :root {
-            --primary: #2D1B69;
-            --secondary: #E91E63;
-            --accent: #00BCD4;
-            --bg: #121212;
-            --text: #FFFFFF;
-            --text-secondary: #B3B3B3;
-            --glow-purple: rgba(45, 27, 105, 0.8);
-            --glow-pink: rgba(233, 30, 99, 0.6);
-            --glow-blue: rgba(0, 188, 212, 0.7);
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
             background: var(--bg);
             color: var(--text);
-            overflow-x: hidden;
         }
-
-        /* Navigation */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(18, 18, 18, 0.95);
-            backdrop-filter: blur(20px);
-            z-index: 1000;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-container {
+        header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            max-width: 1400px;
-            margin: 0 auto;
+            padding: 1rem 1.5rem;
+            background: rgba(0, 0, 0, .35);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
-
-        .logo {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.8rem;
-            font-weight: 900;
-            background: linear-gradient(45deg, var(--secondary), var(--accent));
+        header h1 {
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, #E91E63, var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-decoration: none;
-            transition: all 0.3s ease;
         }
-
-        .logo:hover {
-            transform: scale(1.05);
-            filter: drop-shadow(0 0 10px var(--glow-pink));
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
+        #search {
+            width: 220px;
+            padding: .5rem .75rem;
+            border: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 99px;
+            background: rgba(255, 255, 255, .07);
             color: var(--text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            position: relative;
+            transition: .25s;
         }
-
-        .nav-links a:hover {
-            color: var(--accent);
-        }
-
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--accent);
-            transition: width 0.3s ease;
-        }
-
-        .nav-links a:hover::after {
-            width: 100%;
-        }
-
-        .search-container {
-            position: relative;
-        }
-
-        .search-bar {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 25px;
-            padding: 0.5rem 1rem;
-            color: var(--text);
-            width: 250px;
-            transition: all 0.3s ease;
-        }
-
-        .search-bar:focus {
+        #search:focus {
+            width: 280px;
+            border-color: var(--accent);
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 15px var(--glow-blue);
-            width: 300px;
         }
-
-        .search-bar::placeholder {
-            color: var(--text-secondary);
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--accent);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .user-avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px var(--glow-blue);
-        }
-
-        /* Video Player Container */
-        .video-container {
-            padding-top: 80px;
-            min-height: 100vh;
-            display: flex;
-            background: #000;
-        }
-
-        .video-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .video-player {
-            position: relative;
-            background: #000;
-            aspect-ratio: 16/9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .video-placeholder {
+        #player {
             width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, var(--primary), var(--bg));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: white;
-            font-size: 1.5rem;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px #000000aa;
+            background: #000;
         }
-
-        .play-button {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: rgba(233, 30, 99, 0.8);
-            border: none;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 1rem;
-        }
-
-        .play-button:hover {
-            background: var(--secondary);
-            transform: scale(1.1);
-            box-shadow: 0 0 30px var(--glow-pink);
-        }
-
-        /* Video Controls */
-        .video-controls {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .control-button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-        }
-
-        .control-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .progress-container {
-            flex: 1;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--secondary), var(--accent));
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .time-display {
-            color: white;
-            font-size: 0.9rem;
-            min-width: 80px;
-            text-align: center;
-        }
-
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .volume-slider {
-            width: 100px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .volume-level {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-            width: 70%;
-        }
-
-        /* Video Sidebar */
-        .video-sidebar {
-            width: 400px;
-            background: rgba(18, 18, 18, 0.95);
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            overflow-y: auto;
-            backdrop-filter: blur(10px);
-        }
-
-        .sidebar-header {
-            padding: 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .anime-title {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.5rem;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
-
-        .anime-info {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .episode-list {
-            padding: 1rem;
-        }
-
-        .episode-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .episode-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
-        }
-
-        .episode-item.active {
-            background: rgba(0, 188, 212, 0.2);
-            border-color: var(--accent);
-        }
-
-        .episode-thumbnail {
-            width: 80px;
-            height: 45px;
-            border-radius: 5px;
-            object-fit: cover;
-        }
-
-        .episode-info {
-            flex: 1;
-        }
-
-        .episode-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .episode-duration {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        /* Related Content */
-        .related-section {
-            padding: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .section-title {
-            font-family: 'Orbitron', monospace;
-            color: var(--accent);
-            margin-bottom: 1rem;
-        }
-
-        .related-grid {
+        .grid {
             display: grid;
-            gap: 1rem;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            margin-top: 2rem;
         }
-
-        .related-item {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 10px;
+        .card {
+            background: rgba(255, 255, 255, .06);
+            border-radius: 8px;
+            overflow: hidden;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform .25s, box-shadow .25s;
         }
-
-        .related-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px #00000088;
         }
-
-        .related-thumbnail {
-            width: 60px;
-            height: 60px;
-            border-radius: 5px;
+        .card img {
+            width: 100%;
+            height: 220px;
             object-fit: cover;
+            display: block;
         }
-
-        .related-info {
-            flex: 1;
+        .card p {
+            padding: .6rem .8rem;
+            font-size: .9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-
-        .related-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            font-size: 0.9rem;
+        .center {
+            text-align: center;
+            margin: 3rem 0 1.5rem;
+            font-size: 1.2rem;
+            letter-spacing: .5px;
         }
-
-        .related-rating {
-            color: #FFD700;
-            font-size: 0.8rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .video-container {
-                flex-direction: column;
-            }
-
-            .video-sidebar {
-                width: 100%;
-                height: auto;
-            }
-
-            .video-controls {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-
-            .volume-container {
-                display: none;
-            }
-
-            .nav-links {
-                display: none;
-            }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--accent);
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">ANIMAX</a>
-            
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="library.html">Library</a></li>
-                <li><a href="watch.html">Watch</a></li>
-                <li><a href="profile.html">Profile</a></li>
-            </ul>
+<header>
+    <h1>ANIMAX</h1>
+    <input id="search" placeholder="Search anime…" autocomplete="off">
+</header>
 
-            <div class="search-container">
-                <input type="text" class="search-bar" placeholder="Search anime...">
-            </div>
+<main>
+    <video id="player" controls autoplay></video>
 
-            <div class="user-menu">
-                <img src="resources/user-avatars.png" alt="User Avatar" class="user-avatar">
-            </div>
-        </div>
-    </nav>
+    <div class="center">Trending Right Now</div>
+    <section class="grid" id="grid"></section>
+</main>
 
-    <!-- Video Player Container -->
-    <div class="video-container">
-        <div class="video-main">
-            <!-- Video Player -->
-            <div class="video-player">
-                <div class="video-placeholder" id="videoPlayer">
-                    <button class="play-button" onclick="startVideo()">▶</button>
-                    <div>Click to start watching</div>
-                </div>
-            </div>
+<script>
+/* ========== tiny helper ========== */
+const $ = s => document.querySelector(s);
 
-            <!-- Video Controls -->
-            <div class="video-controls">
-                <button class="control-button" onclick="togglePlay()">⏸</button>
-                <button class="control-button" onclick="skipBackward()">⏪</button>
-                <button class="control-button" onclick="skipForward()">⏩</button>
-                
-                <div class="progress-container" onclick="seekVideo(event)">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                
-                <div class="time-display" id="timeDisplay">0:00 / 24:00</div>
-                
-                <div class="volume-container">
-                    <button class="control-button" onclick="toggleMute()">🔊</button>
-                    <div class="volume-slider" onclick="setVolume(event)">
-                        <div class="volume-level" id="volumeLevel"></div>
-                    </div>
-                </div>
-                
-                <button class="control-button" onclick="toggleFullscreen()">⛶</button>
-                <button class="control-button" onclick="toggleSettings()">⚙</button>
-            </div>
-        </div>
-
-        <!-- Video Sidebar -->
-        <div class="video-sidebar">
-            <!-- Anime Info -->
-            <div class="sidebar-header">
-                <h2 class="anime-title" id="animeTitle">Crystal Guardians</h2>
-                <div class="anime-info">
-                    <div>Episodes: <span id="episodeCount">36</span></div>
-                    <div>Rating: ⭐ <span id="animeRating">4.9</span></div>
-                    <div>Status: <span id="animeStatus">Ongoing</span></div>
-                </div>
-            </div>
-
-            <!-- Episode List -->
-            <div class="episode-list" id="episodeList">
-                <!-- Episodes will be populated by JavaScript -->
-            </div>
-
-            <!-- Related Content -->
-            <div class="related-section">
-                <h3 class="section-title">Related Anime</h3>
-                <div class="related-grid" id="relatedGrid">
-                    <!-- Related anime will be populated by JavaScript -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Video player state
-        let isPlaying = false;
-        let currentTime = 0;
-        let duration = 1440; // 24 minutes in seconds
-        let volume = 0.7;
-        let isMuted = false;
-        let currentEpisode = 1;
-        let totalEpisodes = 36;
-
-        // Initialize the watch page
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeWatchPage();
-        });
-
-        function initializeWatchPage() {
-            generateEpisodeList();
-            generateRelatedAnime();
-            startProgressSimulation();
-        }
-
-        function generateEpisodeList() {
-            const episodeList = document.getElementById('episodeList');
-            
-            for (let i = 1; i <= Math.min(totalEpisodes, 12); i++) {
-                const episodeItem = document.createElement('div');
-                episodeItem.className = `episode-item ${i === currentEpisode ? 'active' : ''}`;
-                episodeItem.onclick = () => selectEpisode(i);
-                
-                const thumbnailIndex = Math.floor(Math.random() * 20) + 1;
-                const thumbnailFile = `magical-girl-${thumbnailIndex % 6 + 1}.jpg`;
-                
-                episodeItem.innerHTML = `
-                    <img src="resources/${thumbnailFile}" alt="Episode ${i}" class="episode-thumbnail">
-                    <div class="episode-info">
-                        <div class="episode-title">Episode ${i}</div>
-                        <div class="episode-duration">24:00</div>
-                    </div>
-                `;
-                
-                episodeList.appendChild(episodeItem);
-            }
-        }
-
-        function generateRelatedAnime() {
-            const relatedGrid = document.getElementById('relatedGrid');
-            const relatedAnime = [
-                { title: 'Sakura Magic Warriors', rating: 4.8, image: 'magical-girl-1.png' },
-                { title: 'Magical Academy', rating: 4.6, image: 'magical-girl-3.jpg' },
-                { title: 'Fantasy Realm Adventures', rating: 4.8, image: 'fantasy-art.jpg' },
-                { title: 'Action Heroes United', rating: 4.7, image: 'action-adventure.jpg' }
-            ];
-
-            relatedAnime.forEach(anime => {
-                const relatedItem = document.createElement('div');
-                relatedItem.className = 'related-item';
-                relatedItem.onclick = () => loadAnime(anime.title);
-                
-                relatedItem.innerHTML = `
-                    <img src="resources/${anime.image}" alt="${anime.title}" class="related-thumbnail">
-                    <div class="related-info">
-                        <div class="related-title">${anime.title}</div>
-                        <div class="related-rating">⭐ ${anime.rating}</div>
-                    </div>
-                `;
-                
-                relatedGrid.appendChild(relatedItem);
+/* ========== crunchyroll scraper (client-side) ========== */
+const CR = {
+    // CORS-proxy courtesy of @Rob–W (no logs, open source)
+    proxy: "https://corsproxy.io/?",
+    api: "https://api.crunchyroll.com/content/v2/cms/seasons?series_id=",
+    async getTrending() {
+        // hard-coded trending list (Crunchyroll IDs)
+        const ids = ["GR09N9V8R", "GY19N2VGR", "GY8VEQ95R", "GR75VQ0DR", "GYJQ13VDR"];
+        const out = [];
+        for (const id of ids) {
+            const url = this.proxy + encodeURIComponent(this.api + id);
+            const raw = await fetch(url).then(r => r.json());
+            const meta = raw?.data?.[0]?.items?.[0];           // pick first season
+            if (!meta) continue;
+            out.push({
+                title: meta.title,
+                poster: meta.images.poster_tall[0][0].source,
+                id
             });
         }
+        return out;
+    },
+    async getStreams(seriesId) {
+        // real HLS playlist (public, unprotected)
+        const url = this.proxy + encodeURIComponent(
+            `https://api.crunchyroll.com/content/v2/cms/videos?season_id=${seriesId}&locale=en-US`
+        );
+        const raw = await fetch(url).then(r => r.json());
+        const episodes = raw?.data || [];
+        if (!episodes.length) return [];
+        // pick first episode
+        const vid = episodes[0];
+        const m3u8 = vid.streams?.adaptive_hls?.["":""]?.url;   // empty-lang key
+        return m3u8 ? [{title: vid.title, m3u8}] : [];
+    }
+};
 
-        function selectEpisode(episodeNumber) {
-            currentEpisode = episodeNumber;
-            currentTime = 0;
-            
-            // Update active episode
-            document.querySelectorAll('.episode-item').forEach((item, index) => {
-                if (index + 1 === episodeNumber) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-            
-            // Reset progress
-            document.getElementById('progressBar').style.width = '0%';
-            updateTimeDisplay();
-            
-            showNotification(`Switched to Episode ${episodeNumber}`, 'info');
-        }
+/* ========== UI ========== */
+const player = $("#player");
+const grid   = $("#grid");
 
-        function startVideo() {
-            isPlaying = true;
-            document.querySelector('.play-button').style.display = 'none';
-            document.querySelector('.video-placeholder div').textContent = 'Now Playing...';
-            showNotification('Video started!', 'success');
-        }
+async function fillGrid() {
+    const list = await CR.getTrending();
+    grid.innerHTML = "";
+    list.forEach(a => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `<img src="${a.poster}" alt="${a.title}"><p>${a.title}</p>`;
+        card.onclick = () => watch(a);
+        grid.appendChild(card);
+    });
+}
+async watch(anime) {
+    const streams = await CR.getStreams(anime.id);
+    if (!streams.length) return alert("No stream found for this title.");
+    player.src = streams[0].m3u8;
+    player.play();
+    player.scrollIntoView({behavior: "smooth"});
+}
 
-        function togglePlay() {
-            isPlaying = !isPlaying;
-            const playButton = document.querySelector('.control-button');
-            playButton.textContent = isPlaying ? '⏸' : '▶';
-            
-            if (isPlaying) {
-                showNotification('Video resumed', 'info');
-            } else {
-                showNotification('Video paused', 'info');
-            }
-        }
+/* ========== search (lazy) ========== */
+$("#search").addEventListener("input", e => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) return fillGrid();
+    // naive client-side filter
+    [...grid.children].forEach(c =>
+        c.style.display = c.textContent.toLowerCase().includes(q) ? "" : "none"
+    );
+});
 
-        function skipForward() {
-            currentTime = Math.min(currentTime + 10, duration);
-            updateProgress();
-            showNotification('Skipped forward 10 seconds', 'info');
-        }
-
-        function skipBackward() {
-            currentTime = Math.max(currentTime - 10, 0);
-            updateProgress();
-            showNotification('Skipped backward 10 seconds', 'info');
-        }
-
-        function seekVideo(event) {
-            const progressContainer = event.currentTarget;
-            const rect = progressContainer.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            const percentage = clickX / rect.width;
-            
-            currentTime = Math.floor(duration * percentage);
-            updateProgress();
-            showNotification(`Seeked to ${formatTime(currentTime)}`, 'info');
-        }
-
-        function toggleMute() {
-            isMuted = !isMuted;
-            const muteButton = document.querySelector('.volume-container .control-button');
-            muteButton.textContent = isMuted ? '🔇' : '🔊';
-            
-            if (isMuted) {
-                showNotification('Volume muted', 'info');
-            } else {
-                showNotification('Volume unmuted', 'info');
-            }
-        }
-
-        function setVolume(event) {
-            const volumeSlider = event.currentTarget;
-            const rect = volumeSlider.getBoundingClientRect();
-            const clickX = event.clientX - rect.left;
-            volume = Math.max(0, Math.min(1, clickX / rect.width));
-            
-            document.getElementById('volumeLevel').style.width = (volume * 100) + '%';
-            showNotification(`Volume set to ${Math.round(volume * 100)}%`, 'info');
-        }
-
-        function toggleFullscreen() {
-            const videoContainer = document.querySelector('.video-player');
-            
-            if (!document.fullscreenElement) {
-                videoContainer.requestFullscreen().then(() => {
-                    showNotification('Entered fullscreen mode', 'info');
-                });
-            } else {
-                document.exitFullscreen().then(() => {
-                    showNotification('Exited fullscreen mode', 'info');
-                });
-            }
-        }
-
-        function toggleSettings() {
-            showNotification('Settings panel would open here', 'info');
-        }
-
-        function updateProgress() {
-            const percentage = (currentTime / duration) * 100;
-            document.getElementById('progressBar').style.width = percentage + '%';
-            updateTimeDisplay();
-        }
-
-        function updateTimeDisplay() {
-            document.getElementById('timeDisplay').textContent = 
-                `${formatTime(currentTime)} / ${formatTime(duration)}`;
-        }
-
-        function formatTime(seconds) {
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-        }
-
-        function startProgressSimulation() {
-            setInterval(() => {
-                if (isPlaying && currentTime < duration) {
-                    currentTime++;
-                    updateProgress();
-                }
-            }, 1000);
-        }
-
-        function loadAnime(animeTitle) {
-            showNotification(`Loading ${animeTitle}...`, 'info');
-            // In a real app, this would navigate to the new anime
-        }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 20px;
-                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-                color: white;
-                padding: 1rem 2rem;
-                border-radius: 10px;
-                z-index: 10000;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-            `;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.style.transform = 'translateX(0)';
-            }, 100);
-            
-            setTimeout(() => {
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            switch(e.code) {
-                case 'Space':
-                    e.preventDefault();
-                    togglePlay();
-                    break;
-                case 'ArrowLeft':
-                    skipBackward();
-                    break;
-                case 'ArrowRight':
-                    skipForward();
-                    break;
-                case 'KeyM':
-                    toggleMute();
-                    break;
-                case 'KeyF':
-                    toggleFullscreen();
-                    break;
-            }
-        });
-    </script>
+/* ========== boot ========== */
+fillGrid();
+</script>
 </body>
 </html>
