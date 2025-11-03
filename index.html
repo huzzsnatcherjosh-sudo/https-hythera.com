@@ -1,24 +1,958 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AniStream - Free Anime</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANIMAX - AI-Powered Anime Streaming</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Splide CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2D1B69;
+            --secondary: #E91E63;
+            --accent: #00BCD4;
+            --bg: #121212;
+            --text: #FFFFFF;
+            --text-secondary: #B3B3B3;
+            --glow-purple: rgba(45, 27, 105, 0.8);
+            --glow-pink: rgba(233, 30, 99, 0.6);
+            --glow-blue: rgba(0, 188, 212, 0.7);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 10px var(--glow-pink));
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--glow-blue);
+            width: 300px;
+        }
+
+        .search-bar::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--glow-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--bg) 100%);
+        }
+
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 800px;
+            padding: 2rem;
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--secondary), var(--accent), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.5s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeInUp 1s ease 1s forwards;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--accent);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 10px 25px var(--glow-pink);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 10px 25px var(--glow-blue);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 4rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 4rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        /* AI Recommendation Engine */
+        .ai-recommendations {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .recommendation-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        .form-select, .form-input {
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .form-select:focus, .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--glow-blue);
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .anime-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .anime-card:hover {
+            transform: translateY(-5px) rotateY(5deg);
+            box-shadow: 0 15px 35px var(--glow-purple);
+            border-color: var(--accent);
+        }
+
+        .anime-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .anime-card:hover .anime-thumbnail {
+            transform: scale(1.05);
+        }
+
+        .anime-info {
+            padding: 1rem;
+        }
+
+        .anime-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .anime-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .anime-genre {
+            font-size: 0.8rem;
+            color: var(--accent);
+            background: rgba(0, 188, 212, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+        }
+
+        .anime-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #FFD700;
+        }
+
+        .anime-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Genre Wheel */
+        .genre-wheel {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 2rem auto;
+        }
+
+        .genre-item {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .genre-item:hover {
+            transform: scale(1.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--glow-blue);
+        }
+
+        /* Featured Carousel */
+        .featured-carousel {
+            margin: 3rem 0;
+        }
+
+        .splide__slide {
+            padding: 0 0.5rem;
+        }
+
+        .carousel-card {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .carousel-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px var(--glow-purple);
+        }
+
+        .carousel-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .carousel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            padding: 2rem;
+            color: white;
+        }
+
+        .carousel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .carousel-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Statistics Dashboard */
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px var(--glow-purple);
+        }
+
+        .stat-number {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Watchlist Sidebar */
+        .watchlist-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            transition: right 0.3s ease;
+            z-index: 999;
+            overflow-y: auto;
+        }
+
+        .watchlist-sidebar.open {
+            right: 0;
+        }
+
+        .watchlist-header {
+            padding: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .watchlist-content {
+            padding: 1rem;
+        }
+
+        .watchlist-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .watchlist-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .watchlist-thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .watchlist-info {
+            flex: 1;
+        }
+
+        .watchlist-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .watchlist-progress {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary), var(--accent));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .footer-copyright {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .search-bar {
+                width: 150px;
+            }
+
+            .search-bar:focus {
+                width: 200px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .recommendation-form {
+                grid-template-columns: 1fr;
+            }
+
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .watchlist-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+
+            .stats-dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            color: var(--accent);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 2rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--secondary);
+        }
+
+        /* Particle Canvas */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-  <header>
-    <h1 data-aos="fade-down">AniStream</h1>
-    <button id="themeToggle">🌙 Toggle Theme</button>
-  </header>
+    <!-- Particle Background -->
+    <canvas id="particles-canvas"></canvas>
 
-  <section class="hero" data-aos="fade-up">
-    <h2>Watch Anime for Free, No Ads, Forever.</h2>
-    <a href="anime.html" class="btn">Explore Anime</a>
-  </section>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">ANIMAX</a>
+            
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#library">Library</a></li>
+                <li><a href="#watch">Watch</a></li>
+                <li><a href="#profile">Profile</a></li>
+            </ul>
 
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script src="script.js"></script>
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search anime..." id="searchInput">
+            </div>
+
+            <div class="user-menu">
+                <button class="btn btn-secondary" onclick="toggleWatchlist()">Watchlist</button>
+                <img src="resources/user-avatars.png" alt="User Avatar" class="user-avatar" onclick="showUserMenu()">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-background">
+            <img src="resources/hero-anime.png" alt="Hero Background" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title">Discover Your Next Favorite Anime</h1>
+            <p class="hero-subtitle">AI-powered recommendations and unlimited streaming of the best anime series</p>
+            <div class="hero-buttons">
+                <a href="#recommendations" class="btn btn-primary">Get Recommendations</a>
+                <a href="#featured" class="btn btn-secondary">Browse Library</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- AI Recommendations Section -->
+        <section class="section" id="recommendations">
+            <h2 class="section-title">AI-Powered Recommendations</h2>
+            <div class="ai-recommendations">
+                <form class="recommendation-form" id="recommendationForm">
+                    <div class="form-group">
+                        <label class="form-label">Preferred Genre</label>
+                        <select class="form-select" id="genreSelect">
+                            <option value="">Select Genre</option>
+                            <option value="action">Action</option>
+                            <option value="romance">Romance</option>
+                            <option value="fantasy">Fantasy</option>
+                            <option value="sci-fi">Sci-Fi</option>
+                            <option value="slice-of-life">Slice of Life</option>
+                            <option value="drama">Drama</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mood</label>
+                        <select class="form-select" id="moodSelect">
+                            <option value="">Select Mood</option>
+                            <option value="happy">Happy & Uplifting</option>
+                            <option value="dark">Dark & Mysterious</option>
+                            <option value="adventurous">Adventurous</option>
+                            <option value="emotional">Emotional</option>
+                            <option value="relaxing">Relaxing</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Episode Length</label>
+                        <select class="form-select" id="lengthSelect">
+                            <option value="">Any Length</option>
+                            <option value="short">Short (12-24 episodes)</option>
+                            <option value="medium">Medium (25-50 episodes)</option>
+                            <option value="long">Long (50+ episodes)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            Get Recommendations
+                        </button>
+                    </div>
+                </form>
+
+                <div class="recommendations-grid" id="recommendationsGrid">
+                    <!-- Recommendations will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Genre Wheel Section -->
+        <section class="section">
+            <h2 class="section-title">Explore by Genre</h2>
+            <div class="genre-wheel" id="genreWheel">
+                <!-- Genre items will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Featured Carousel -->
+        <section class="section featured-carousel" id="featured">
+            <h2 class="section-title">Featured Anime</h2>
+            <div class="splide" id="featured-splide">
+                <div class="splide__track">
+                    <ul class="splide__list" id="featuredList">
+                        <!-- Featured anime will be populated here -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistics Dashboard -->
+        <section class="section">
+            <h2 class="section-title">Platform Statistics</h2>
+            <div class="stats-dashboard">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalAnime">1,234</div>
+                    <div class="stat-label">Anime Series</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalUsers">45,678</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEpisodes">25,678</div>
+                    <div class="stat-label">Episodes Available</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="userRating">4.8</div>
+                    <div class="stat-label">User Rating</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Watchlist Sidebar -->
+    <aside class="watchlist-sidebar" id="watchlistSidebar">
+        <div class="watchlist-header">
+            <h3>My Watchlist</h3>
+            <button class="btn btn-secondary" onclick="toggleWatchlist()">Close</button>
+        </div>
+        <div class="watchlist-content" id="watchlistContent">
+            <!-- Watchlist items will be populated here -->
+        </div>
+    </aside>
+
+    <!-- Modal -->
+    <div class="modal" id="animeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Anime Details</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- Modal content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">ANIMAX</div>
+            <p class="footer-text">Your ultimate destination for AI-powered anime discovery and streaming</p>
+            <div class="footer-links">
+                <a href="#about">About</a>
+                <a href="#privacy">Privacy</a>
+                <a href="#terms">Terms</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <p class="footer-copyright">&copy; 2024 ANIMAX. All rights reserved. Powered by AI technology.</p>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
 </body>
 </html>
