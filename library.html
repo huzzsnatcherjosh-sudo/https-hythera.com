@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - ANIMAX</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2D1B69;
+            --secondary: #E91E63;
+            --accent: #00BCD4;
+            --bg: #121212;
+            --text: #FFFFFF;
+            --text-secondary: #B3B3B3;
+            --glow-purple: rgba(45, 27, 105, 0.8);
+            --glow-pink: rgba(233, 30, 99, 0.6);
+            --glow-blue: rgba(0, 188, 212, 0.7);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(18, 18, 18, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 10px var(--glow-pink));
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-bar {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            color: var(--text);
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--glow-blue);
+            width: 300px;
+        }
+
+        .search-bar::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--glow-blue);
+        }
+
+        /* Main Container */
+        .main-container {
+            padding-top: 80px;
+            min-height: 100vh;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 2rem;
+            padding: 80px 2rem 2rem;
+        }
+
+        /* Sidebar Filters */
+        .sidebar {
+            width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .sidebar-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--accent);
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+        }
+
+        .filter-group {
+            margin-bottom: 2rem;
+        }
+
+        .filter-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .filter-select, .filter-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--glow-blue);
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+        }
+
+        .clear-filters {
+            width: 100%;
+            padding: 0.75rem;
+            background: transparent;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-filters:hover {
+            background: var(--secondary);
+            color: white;
+            box-shadow: 0 0 15px var(--glow-pink);
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+        }
+
+        .content-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .search-results {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* View Controls */
+        .view-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .view-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .view-button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .view-button.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .sort-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .sort-select {
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+        }
+
+        /* Anime Grid */
+        .anime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .anime-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .anime-card {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .anime-card:hover {
+            transform: translateY(-5px) rotateY(5deg);
+            box-shadow: 0 15px 35px var(--glow-purple);
+            border-color: var(--accent);
+        }
+
+        .anime-card.list-view {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .anime-card.list-view .anime-thumbnail {
+            width: 120px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+
+        .anime-card.list-view .anime-info {
+            flex: 1;
+            padding: 0 1rem;
+        }
+
+        .anime-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .anime-card:hover .anime-thumbnail {
+            transform: scale(1.05);
+        }
+
+        .anime-info {
+            padding: 1rem;
+        }
+
+        .anime-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .anime-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .anime-genre {
+            font-size: 0.8rem;
+            color: var(--accent);
+            background: rgba(0, 188, 212, 0.2);
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+        }
+
+        .anime-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            color: #FFD700;
+        }
+
+        .anime-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+
+        .anime-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .anime-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-weight: 500;
+        }
+
+        .status-ongoing {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+
+        .status-completed {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+
+        /* Action Buttons */
+        .anime-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.8rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--accent);
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        .page-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-button:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .page-button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .page-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Statistics Panel */
+        .stats-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .stats-chart {
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                padding: 80px 1rem 2rem;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .anime-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .view-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .sort-controls {
+                justify-content: space-between;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* No Results */
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .no-results h3 {
+            font-family: 'Orbitron', monospace;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">ANIMAX</a>
+            
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="library.html">Library</a></li>
+                <li><a href="watch.html">Watch</a></li>
+                <li><a href="profile.html">Profile</a></li>
+            </ul>
+
+            <div class="search-container">
+                <input type="text" class="search-bar" placeholder="Search anime..." id="searchInput">
+            </div>
+
+            <div class="user-menu">
+                <img src="resources/user-avatars.png" alt="User Avatar" class="user-avatar">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Filters -->
+        <aside class="sidebar">
+            <h2 class="sidebar-title">Filters</h2>
+            
+            <div class="filter-group">
+                <label class="filter-label">Search</label>
+                <input type="text" class="filter-input" placeholder="Search anime..." id="filterSearch">
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Genre</label>
+                <select class="filter-select" id="genreFilter">
+                    <option value="">All Genres</option>
+                    <option value="action">Action</option>
+                    <option value="romance">Romance</option>
+                    <option value="fantasy">Fantasy</option>
+                    <option value="sci-fi">Sci-Fi</option>
+                    <option value="slice-of-life">Slice of Life</option>
+                    <option value="drama">Drama</option>
+                    <option value="magical-girl">Magical Girl</option>
+                    <option value="mecha">Mecha</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Status</label>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="ongoing" value="ongoing">
+                    <label for="ongoing">Ongoing</label>
+                </div>
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="completed" value="completed">
+                    <label for="completed">Completed</label>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Year</label>
+                <select class="filter-select" id="yearFilter">
+                    <option value="">All Years</option>
+                    <option value="2024">2024</option>
+                    <option value="2023">2023</option>
+                    <option value="2022">2022</option>
+                    <option value="2021">2021</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Rating</label>
+                <select class="filter-select" id="ratingFilter">
+                    <option value="">All Ratings</option>
+                    <option value="4.5">4.5+ Stars</option>
+                    <option value="4.0">4.0+ Stars</option>
+                    <option value="3.5">3.5+ Stars</option>
+                </select>
+            </div>
+
+            <button class="clear-filters" onclick="clearAllFilters()">Clear All Filters</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <div class="content-header">
+                <h1 class="page-title">Anime Library</h1>
+                <div class="search-results" id="searchResults">
+                    Showing <span id="resultCount">15</span> anime
+                </div>
+            </div>
+
+            <!-- Statistics Panel -->
+            <div class="stats-panel">
+                <h3 class="stats-title">Library Statistics</h3>
+                <div class="stats-chart" id="statsChart"></div>
+            </div>
+
+            <!-- View Controls -->
+            <div class="view-controls">
+                <div class="view-toggle">
+                    <button class="view-button active" onclick="setView('grid')">Grid</button>
+                    <button class="view-button" onclick="setView('list')">List</button>
+                </div>
+
+                <div class="sort-controls">
+                    <label>Sort by:</label>
+                    <select class="sort-select" id="sortSelect" onchange="sortAnime()">
+                        <option value="title">Title (A-Z)</option>
+                        <option value="rating">Rating</option>
+                        <option value="year">Year</option>
+                        <option value="episodes">Episodes</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Anime Grid -->
+            <div class="anime-grid" id="animeGrid">
+                <!-- Anime cards will be populated here -->
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results" id="noResults" style="display: none;">
+                <h3>No Anime Found</h3>
+                <p>Try adjusting your filters or search terms</p>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination">
+                <button class="page-button" onclick="changePage(-1)">Previous</button>
+                <button class="page-button active">1</button>
+                <button class="page-button">2</button>
+                <button class="page-button">3</button>
+                <button class="page-button">4</button>
+                <button class="page-button">5</button>
+                <button class="page-button" onclick="changePage(1)">Next</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Library state
+        let currentView = 'grid';
+        let currentSort = 'title';
+        let currentPage = 1;
+        let itemsPerPage = 12;
+        let filteredAnime = [];
+        let allAnime = [];
+
+        // Sample anime data (expanded from main.js)
+        const animeDatabase = [
+            {
+                id: 1,
+                title: "Sakura Magic Warriors",
+                genre: "magical-girl",
+                subGenre: "Fantasy",
+                rating: 4.8,
+                episodes: 24,
+                status: "completed",
+                year: 2023,
+                description: "A group of magical girls must protect their city from dark forces while navigating the challenges of high school life.",
+                image: "resources/magical-girl-1.png"
+            },
+            {
+                id: 2,
+                title: "Love in Tokyo",
+                genre: "romance",
+                subGenre: "Slice of Life",
+                rating: 4.6,
+                episodes: 12,
+                status: "completed",
+                year: 2024,
+                description: "A heartwarming story about finding love and friendship in the bustling streets of Tokyo.",
+                image: "resources/romantic-1.jpg"
+            },
+            {
+                id: 3,
+                title: "Crystal Guardians",
+                genre: "magical-girl",
+                subGenre: "Adventure",
+                rating: 4.9,
+                episodes: 36,
+                status: "ongoing",
+                year: 2024,
+                description: "Ancient crystals grant magical powers to chosen warriors who must defend the world from ancient evils.",
+                image: "resources/magical-girl-2.jpg"
+            },
+            {
+                id: 4,
+                title: "Mecha Revolution",
+                genre: "mecha",
+                subGenre: "Sci-Fi",
+                rating: 4.7,
+                episodes: 48,
+                status: "completed",
+                year: 2023,
+                description: "In a future where mechs rule the battlefield, one pilot must lead the resistance against tyranny.",
+                image: "resources/mecha-robot.jpg"
+            },
+            {
+                id: 5,
+                title: "School Days Memories",
+                genre: "slice-of-life",
+                subGenre: "Comedy",
+                rating: 4.5,
+                episodes: 24,
+                status: "completed",
+                year: 2023,
+                description: "Follow the daily adventures of a group of high school friends as they create unforgettable memories.",
+                image: "resources/slice-of-life.jpg"
+            },
+            {
+                id: 6,
+                title: "Fantasy Realm Adventures",
+                genre: "fantasy",
+                subGenre: "Adventure",
+                rating: 4.8,
+                episodes: 52,
+                status: "ongoing",
+                year: 2024,
+                description: "A young hero is transported to a magical realm where they must save the kingdom from darkness.",
+                image: "resources/fantasy-art.jpg"
+            },
+            {
+                id: 7,
+                title: "Neon City Blues",
+                genre: "sci-fi",
+                subGenre: "Cyberpunk",
+                rating: 4.6,
+                episodes: 18,
+                status: "completed",
+                year: 2024,
+                description: "In a dystopian future, a hacker uncovers a conspiracy that threatens the entire city.",
+                image: "resources/characters-wallpaper.jpg"
+            },
+            {
+                id: 8,
+                title: "Emotional Journey",
+                genre: "drama",
+                subGenre: "Psychological",
+                rating: 4.9,
+                episodes: 22,
+                status: "completed",
+                year: 2023,
+                description: "A deeply emotional story about healing, growth, and finding hope in the darkest moments.",
+                image: "resources/drama-emotional.jpg"
+            },
+            {
+                id: 9,
+                title: "Action Heroes United",
+                genre: "action",
+                subGenre: "Superhero",
+                rating: 4.7,
+                episodes: 36,
+                status: "ongoing",
+                year: 2024,
+                description: "A team of young heroes with extraordinary powers must work together to save the world.",
+                image: "resources/action-adventure.jpg"
+            },
+            {
+                id: 10,
+                title: "Spring Romance",
+                genre: "romance",
+                subGenre: "School",
+                rating: 4.4,
+                episodes: 12,
+                status: "completed",
+                year: 2024,
+                description: "A sweet love story that blooms during the cherry blossom season at a prestigious academy.",
+                image: "resources/romantic-2.jpg"
+            },
+            {
+                id: 11,
+                title: "Cosmic Adventures",
+                genre: "sci-fi",
+                subGenre: "Space Opera",
+                rating: 4.8,
+                episodes: 42,
+                status: "ongoing",
+                year: 2024,
+                description: "Explore the vast universe with a crew of adventurers seeking new worlds and civilizations.",
+                image: "resources/adventure-2.jpg"
+            },
+            {
+                id: 12,
+                title: "Mecha Warriors 2.0",
+                genre: "mecha",
+                subGenre: "Military",
+                rating: 4.5,
+                episodes: 28,
+                status: "completed",
+                year: 2023,
+                description: "The next generation of mecha pilots must defend Earth from an alien invasion.",
+                image: "resources/mecha-robot-2.jpg"
+            },
+            {
+                id: 13,
+                title: "Magical Academy",
+                genre: "magical-girl",
+                subGenre: "School",
+                rating: 4.6,
+                episodes: 24,
+                status: "completed",
+                year: 2024,
+                description: "At a secret academy for magical girls, students learn to master their powers and fight evil.",
+                image: "resources/magical-girl-3.jpg"
+            },
+            {
+                id: 14,
+                title: "Tokyo Love Story",
+                genre: "romance",
+                subGenre: "Drama",
+                rating: 4.7,
+                episodes: 16,
+                status: "completed",
+                year: 2023,
+                description: "A mature romance set in modern Tokyo about second chances and true love.",
+                image: "resources/romantic-3.jpg"
+            },
+            {
+                id: 15,
+                title: "Warrior Princess",
+                genre: "fantasy",
+                subGenre: "Adventure",
+                rating: 4.8,
+                episodes: 32,
+                status: "ongoing",
+                year: 2024,
+                description: "A princess with legendary sword skills embarks on a quest to save her kingdom from darkness.",
+                image: "resources/magical-girl-4.jpg"
+            }
+        ];
+
+        // Initialize library
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeLibrary();
+        });
+
+        function initializeLibrary() {
+            allAnime = [...animeDatabase];
+            filteredAnime = [...allAnime];
+            
+            setupEventListeners();
+            renderAnime();
+            initializeStats();
+            updateResultCount();
+        }
+
+        function setupEventListeners() {
+            // Search inputs
+            document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 300));
+            document.getElementById('filterSearch').addEventListener('input', debounce(applyFilters, 300));
+            
+            // Filter selects
+            document.getElementById('genreFilter').addEventListener('change', applyFilters);
+            document.getElementById('yearFilter').addEventListener('change', applyFilters);
+            document.getElementById('ratingFilter').addEventListener('change', applyFilters);
+            
+            // Status checkboxes
+            document.getElementById('ongoing').addEventListener('change', applyFilters);
+            document.getElementById('completed').addEventListener('change', applyFilters);
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase() || 
+                             document.getElementById('filterSearch').value.toLowerCase();
+            const genre = document.getElementById('genreFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            const rating = parseFloat(document.getElementById('ratingFilter').value);
+            const ongoing = document.getElementById('ongoing').checked;
+            const completed = document.getElementById('completed').checked;
+
+            filteredAnime = allAnime.filter(anime => {
+                // Search filter
+                if (searchTerm && !anime.title.toLowerCase().includes(searchTerm) && 
+                    !anime.description.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+
+                // Genre filter
+                if (genre && anime.genre !== genre) {
+                    return false;
+                }
+
+                // Year filter
+                if (year && anime.year.toString() !== year) {
+                    return false;
+                }
+
+                // Rating filter
+                if (rating && anime.rating < rating) {
+                    return false;
+                }
+
+                // Status filter
+                if (ongoing || completed) {
+                    if (ongoing && !completed && anime.status !== 'ongoing') {
+                        return false;
+                    }
+                    if (completed && !ongoing && anime.status !== 'completed') {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            renderAnime();
+            updateResultCount();
+        }
+
+        function clearAllFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterSearch').value = '';
+            document.getElementById('genreFilter').value = '';
+            document.getElementById('yearFilter').value = '';
+            document.getElementById('ratingFilter').value = '';
+            document.getElementById('ongoing').checked = false;
+            document.getElementById('completed').checked = false;
+            
+            applyFilters();
+        }
+
+        function setView(view) {
+            currentView = view;
+            
+            // Update button states
+            document.querySelectorAll('.view-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderAnime();
+        }
+
+        function sortAnime() {
+            currentSort = document.getElementById('sortSelect').value;
+            
+            filteredAnime.sort((a, b) => {
+                switch(currentSort) {
+                    case 'title':
+                        return a.title.localeCompare(b.title);
+                    case 'rating':
+                        return b.rating - a.rating;
+                    case 'year':
+                        return b.year - a.year;
+                    case 'episodes':
+                        return b.episodes - a.episodes;
+                    default:
+                        return 0;
+                }
+            });
+            
+            renderAnime();
+        }
+
+        function renderAnime() {
+            const grid = document.getElementById('animeGrid');
+            const noResults = document.getElementById('noResults');
+            
+            if (filteredAnime.length === 0) {
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            noResults.style.display = 'none';
+            
+            // Apply view class
+            if (currentView === 'list') {
+                grid.classList.add('list-view');
+            } else {
+                grid.classList.remove('list-view');
+            }
+            
+            // Clear grid
+            grid.innerHTML = '';
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = filteredAnime.slice(startIndex, endIndex);
+            
+            // Render anime cards
+            pageItems.forEach(anime => {
+                const card = createAnimeCard(anime);
+                grid.appendChild(card);
+            });
+            
+            // Animate cards
+            anime({
+                targets: '.anime-card',
+                opacity: [0, 1],
+                translateY: [30, 0],
+                delay: anime.stagger(100),
+                duration: 600,
+                easing: 'easeOutQuart'
+            });
+            
+            updatePagination();
+        }
+
+        function createAnimeCard(anime) {
+            const card = document.createElement('div');
+            card.className = `anime-card ${currentView === 'list' ? 'list-view' : ''}`;
+            card.onclick = () => showAnimeDetails(anime.id);
+            
+            const statusClass = anime.status === 'ongoing' ? 'status-ongoing' : 'status-completed';
+            
+            card.innerHTML = `
+                <img src="${anime.image}" alt="${anime.title}" class="anime-thumbnail">
+                <div class="anime-info">
+                    <h3 class="anime-title">${anime.title}</h3>
+                    <div class="anime-meta">
+                        <span class="anime-genre">${anime.subGenre}</span>
+                        <div class="anime-rating">
+                            <span>★</span>
+                            <span>${anime.rating}</span>
+                        </div>
+                    </div>
+                    ${currentView === 'list' ? `<p class="anime-description">${anime.description}</p>` : ''}
+                    <div class="anime-stats">
+                        <span>${anime.episodes} episodes • ${anime.year}</span>
+                        <span class="anime-status ${statusClass}">${anime.status}</span>
+                    </div>
+                    <div class="anime-actions">
+                        <button class="action-button btn-primary" onclick="event.stopPropagation(); addToWatchlist(${anime.id})">
+                            Add to Watchlist
+                        </button>
+                        <button class="action-button btn-secondary" onclick="event.stopPropagation(); startWatching(${anime.id})">
+                            Watch Now
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function updateResultCount() {
+            document.getElementById('resultCount').textContent = filteredAnime.length;
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredAnime.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            // Simple pagination for demo
+            pagination.innerHTML = `
+                <button class="page-button" onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+                ${Array.from({length: Math.min(totalPages, 5)}, (_, i) => {
+                    const page = i + 1;
+                    return `<button class="page-button ${page === currentPage ? 'active' : ''}" onclick="goToPage(${page})">${page}</button>`;
+                }).join('')}
+                <button class="page-button" onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+            `;
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(filteredAnime.length / itemsPerPage);
+            const newPage = currentPage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderAnime();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderAnime();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function initializeStats() {
+            const chartDom = document.getElementById('statsChart');
+            const myChart = echarts.init(chartDom);
+            
+            // Genre distribution data
+            const genreData = {};
+            allAnime.forEach(anime => {
+                genreData[anime.genre] = (genreData[anime.genre] || 0) + 1;
+            });
+            
+            const option = {
+                backgroundColor: 'transparent',
+                textStyle: {
+                    color: '#ffffff'
+                },
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    borderColor: '#00BCD4',
+                    textStyle: {
+                        color: '#ffffff'
+                    }
+                },
+                series: [{
+                    name: 'Genres',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 10,
+                        borderColor: '#121212',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: false,
+                        position: 'center'
+                    },
+                    emphasis: {
+                        label: {
+                            show: true,
+                            fontSize: '16',
+                            fontWeight: 'bold',
+                            color: '#ffffff'
+                        }
+                    },
+                    labelLine: {
+                        show: false
+                    },
+                    data: Object.entries(genreData).map(([genre, count]) => ({
+                        value: count,
+                        name: genre.charAt(0).toUpperCase() + genre.slice(1).replace('-', ' '),
+                        itemStyle: {
+                            color: getGenreColor(genre)
+                        }
+                    }))
+                }]
+            };
+            
+            myChart.setOption(option);
+        }
+
+        function getGenreColor(genre) {
+            const colors = {
+                'action': '#FF6B6B',
+                'romance': '#FF8E53',
+                'fantasy': '#FE6B8B',
+                'sci-fi': '#FF6F91',
+                'slice-of-life': '#C44569',
+                'drama': '#F8B500',
+                'magical-girl': '#A29BFE',
+                'mecha': '#74B9FF'
+            };
+            return colors[genre] || '#00BCD4';
+        }
+
+        // Utility functions
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function showAnimeDetails(animeId) {
+            showNotification(`Opening details for anime ${animeId}...`, 'info');
+        }
+
+        function addToWatchlist(animeId) {
+            showNotification(`Added anime ${animeId} to watchlist!`, 'success');
+        }
+
+        function startWatching(animeId) {
+            window.location.href = 'watch.html';
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 10px;
+                z-index: 10000;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
